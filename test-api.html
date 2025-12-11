@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API Test - Portfolio Admin</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .test-section {
+            background: white;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .status {
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+        .success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        .info { background: #d1ecf1; color: #0c5460; border: 1px solid #bee5eb; }
+        button {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover { background: #5a6fd8; }
+        pre {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 4px;
+            overflow-x: auto;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔧 Portfolio API Test & Debug</h1>
+    
+    <div class="test-section">
+        <h2>1. Server Connection Test</h2>
+        <div id="serverStatus">Testing server connection...</div>
+        <button onclick="testServerConnection()">Test Again</button>
+    </div>
+
+    <div class="test-section">
+        <h2>2. API Endpoints Test</h2>
+        <div id="apiStatus">Testing API endpoints...</div>
+        <button onclick="testAPIEndpoints()">Test All Endpoints</button>
+    </div>
+
+    <div class="test-section">
+        <h2>3. Data Synchronization Test</h2>
+        <div id="dataStatus">Testing data sync...</div>
+        <button onclick="testDataSync()">Test Data Sync</button>
+        <button onclick="loadAdminData()">Load Admin Data</button>
+    </div>
+
+    <div class="test-section">
+        <h2>4. Cross-Tab Communication Test</h2>
+        <div id="tabStatus">Testing cross-tab...</div>
+        <button onclick="testCrossTab()">Test Cross-Tab</button>
+    </div>
+
+    <div class="test-section">
+        <h2>📊 Test Results</h2>
+        <div id="results"></div>
+        <button onclick="clearResults()">Clear Results</button>
+    </div>
+
+    <script>
+        const API_BASE_URL = window.location.origin;
+        let testResults = [];
+
+        function log(message, type = 'info') {
+            const timestamp = new Date().toLocaleTimeString();
+            const logEntry = `[${timestamp}] ${message}`;
+            testResults.push({ message: logEntry, type, time: timestamp });
+            
+            const resultsDiv = document.getElementById('results');
+            const div = document.createElement('div');
+            div.className = `status ${type}`;
+            div.innerHTML = logEntry;
+            resultsDiv.appendChild(div);
+        }
+
+        async function testServerConnection() {
+            const statusDiv = document.getElementById('serverStatus');
+            statusDiv.innerHTML = 'Testing server connection...';
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/health`);
+                if (response.ok) {
+                    const data = await response.json();
+                    statusDiv.innerHTML = `<div class="status success">✅ Server is running! Status: ${data.status}</div>`;
+                    log('Server connection successful', 'success');
+                } else {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+            } catch (error) {
+                statusDiv.innerHTML = `<div class="status error">❌ Server not running or not accessible</div>`;
+                log(`Server connection failed: ${error.message}`, 'error');
+            }
+        }
+
+        async function testAPIEndpoints() {
+            const statusDiv = document.getElementById('apiStatus');
+            statusDiv.innerHTML = 'Testing all API endpoints...';
+            
+            const endpoints = [
+                '/api/data',
+                '/api/portfolio',
+                '/api/services',
+                '/api/about',
+                '/api/contact',
+                '/api/settings',
+                '/api/images'
+            ];
+
+            let results = [];
+            
+            for (const endpoint of endpoints) {
+                try {
+                    const response = await fetch(`${API_BASE_URL}${endpoint}`);
+                    if (response.ok) {
+                        const data = await response.json();
+                        results.push(`✅ ${endpoint}: OK`);
+                        log(`${endpoint} working`, 'success');
+                    } else {
+                        results.push(`❌ ${endpoint}: HTTP ${response.status}`);
+                        log(`${endpoint} failed: HTTP ${response.status}`, 'error');
+                    }
+                } catch (error) {
+                    results.push(`❌ ${endpoint}: ${error.message}`);
+                    log(`${endpoint} error: ${error.message}`, 'error');
+                }
+            }
+            
+            statusDiv.innerHTML = `<div class="status info">${results.join('<br>')}</div>`;
+        }
+
+        async function testDataSync() {
+            const statusDiv = document.getElementById('dataStatus');
+            statusDiv.innerHTML = 'Testing data synchronization...';
+            
+            try {
+                // Load data from API
+                const response = await fetch(`${API_BASE_URL}/api/data`);
+                if (response.ok) {
+                    const data = await response.json();
+                    statusDiv.innerHTML = `<div class="status success">✅ Data loaded successfully from API</div>`;
+                    log('Data sync successful', 'success');
+                    
+                    // Display some data
+                    const portfolioCount = data.portfolio ? data.portfolio.length : 0;
+                    const servicesCount = data.services ? data.services.length : 0;
+                    log(`Portfolio items: ${portfolioCount}`, 'info');
+                    log(`Services: ${servicesCount}`, 'info');
+                    
+                } else {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+            } catch (error) {
+                statusDiv.innerHTML = `<div class="status error">❌ Data sync failed: ${error.message}</div>`;
+                log(`Data sync failed: ${error.message}`, 'error');
+            }
+        }
+
+        function testCrossTab() {
+            const statusDiv = document.getElementById('tabStatus');
+            
+            // Test localStorage
+            const testKey = 'portfolio_test';
+            const testValue = `test_${Date.now()}`;
+            
+            try {
+                localStorage.setItem(testKey, testValue);
+                const retrieved = localStorage.getItem(testKey);
+                
+                if (retrieved === testValue) {
+                    statusDiv.innerHTML = `<div class="status success">✅ Cross-tab communication working (localStorage OK)</div>`;
+                    log('Cross-tab test successful', 'success');
+                } else {
+                    throw new Error('Value mismatch');
+                }
+                
+                // Clean up
+                localStorage.removeItem(testKey);
+            } catch (error) {
+                statusDiv.innerHTML = `<div class="status error">❌ Cross-tab test failed: ${error.message}</div>`;
+                log(`Cross-tab test failed: ${error.message}`, 'error');
+            }
+        }
+
+        async function loadAdminData() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/about`);
+                if (response.ok) {
+                    const aboutData = await response.json();
+                    log('About data loaded:', 'info');
+                    console.log('About data:', aboutData);
+                    
+                    // Display the data
+                    const resultsDiv = document.getElementById('results');
+                    const dataDiv = document.createElement('div');
+                    dataDiv.className = 'status info';
+                    dataDiv.innerHTML = '<h4>About Data:</h4><pre>' + JSON.stringify(aboutData, null, 2) + '</pre>';
+                    resultsDiv.appendChild(dataDiv);
+                }
+            } catch (error) {
+                log(`Failed to load admin data: ${error.message}`, 'error');
+            }
+        }
+
+        function clearResults() {
+            document.getElementById('results').innerHTML = '';
+            testResults = [];
+        }
+
+        // Auto-run tests on page load
+        window.addEventListener('load', async () => {
+            log('Starting API diagnostic tests...', 'info');
+            await testServerConnection();
+            await testAPIEndpoints();
+            await testDataSync();
+            testCrossTab();
+        });
+
+        // Listen for storage events (cross-tab communication)
+        window.addEventListener('storage', (e) => {
+            log(`Storage event detected: ${e.key}`, 'info');
+        });
+    </script>
+</body>
+</html>
