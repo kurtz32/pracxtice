@@ -333,6 +333,8 @@ function handleTabSwitch(e) {
 // Data management
 async function loadStoredData() {
     try {
+        console.log('Loading stored data from API...');
+        
         // Load all data in parallel
         const [portfolio, services, about, contact, settings, images] = await Promise.all([
             apiService.getPortfolio(),
@@ -343,37 +345,50 @@ async function loadStoredData() {
             apiService.getImages()
         ]);
 
-        portfolioData = portfolio;
-        servicesData = services;
+        portfolioData = portfolio || [];
+        servicesData = services || [];
 
-        // Populate forms
+        console.log('Loaded data:', { about, contact, settings });
+
+        // Populate forms with loaded data
         if (about) {
-            document.getElementById('designerName').value = about.name || 'Alex Chen';
+            document.getElementById('designerName').value = about.name || 'John Kurt Facturan';
             document.getElementById('profession').value = about.profession || 'Creative Graphic Designer';
             document.getElementById('bio').value = about.bio || '';
-            document.getElementById('projectsCount').value = about.projects || '150';
-            document.getElementById('clientsCount').value = about.clients || '50';
-            document.getElementById('experienceYears').value = about.experience || '5';
+            document.getElementById('projectsCount').value = about.projects || '50';
+            document.getElementById('clientsCount').value = about.clients || '0';
+            document.getElementById('experienceYears').value = about.experience || '1';
+            console.log('About form populated with:', about);
+        } else {
+            console.log('No about data received from API');
         }
 
         if (contact) {
-            document.getElementById('email').value = contact.email || 'alex.chen@email.com';
-            document.getElementById('phone').value = contact.phone || '+1 (555) 123-4567';
-            document.getElementById('location').value = contact.location || 'New York, NY';
+            document.getElementById('email').value = contact.email || 'jkurtzhie12@gmail.com';
+            document.getElementById('phone').value = contact.phone || '09944594696';
+            document.getElementById('location').value = contact.location || 'Poblacion Mabinay Negros Oriental';
             document.getElementById('behance').value = contact.behance || '';
             document.getElementById('dribbble').value = contact.dribbble || '';
             document.getElementById('instagram').value = contact.instagram || '';
             document.getElementById('linkedin').value = contact.linkedin || '';
+            console.log('Contact form populated with:', contact);
+        } else {
+            console.log('No contact data received from API');
         }
 
         if (settings) {
             document.getElementById('primaryColor').value = settings.primaryColor || '#667eea';
             document.getElementById('secondaryColor').value = settings.secondaryColor || '#764ba2';
-            document.getElementById('portfolioTitle').value = settings.portfolioTitle || 'Alex Chen - Graphic Designer Portfolio';
+            document.getElementById('portfolioTitle').value = settings.portfolioTitle || 'John Kurt Facturan - Graphic Designer Portfolio';
             document.getElementById('portfolioDescription').value = settings.portfolioDescription || '';
+            console.log('Settings form populated with:', settings);
+        } else {
+            console.log('No settings data received from API');
         }
 
         renderSkillsList(about?.skills || []);
+        
+        console.log('Data loading completed successfully');
         
     } catch (error) {
         console.error('Error loading stored data:', error);
@@ -446,11 +461,29 @@ async function handleAboutSave(e) {
         )
     };
     
+    console.log('Saving about data:', aboutData);
+    
     try {
-        await apiService.updateAbout(aboutData);
-        showMessage('About section updated successfully!', 'success');
+        const result = await apiService.updateAbout(aboutData);
+        console.log('About save result:', result);
+        showMessage('About section updated successfully! Changes will appear on the main page within 5 seconds.', 'success');
+        
+        // Reload data to confirm it was saved
+        setTimeout(async () => {
+            try {
+                const updatedData = await apiService.getAbout();
+                console.log('Verified updated data:', updatedData);
+                if (updatedData && updatedData.name === aboutData.name) {
+                    showMessage('✅ Data saved and verified! Check the main page.', 'success');
+                }
+            } catch (verifyError) {
+                console.error('Verification failed:', verifyError);
+            }
+        }, 1000);
+        
     } catch (error) {
-        showMessage('Failed to update about section', 'error');
+        console.error('About save failed:', error);
+        showMessage('Failed to update about section: ' + error.message, 'error');
     }
 }
 
