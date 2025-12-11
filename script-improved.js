@@ -547,24 +547,28 @@ function bindPortfolioEvents() {
 
 // Sync data periodically
 function startPeriodicSync() {
-    // Sync every 10 seconds to catch any changes made by admin panel
+    // Sync every 5 seconds to catch any changes made by admin panel (faster sync)
     syncInterval = setInterval(async () => {
         try {
             console.log('Periodic sync check...');
             const newData = await apiService.getAllData();
             if (newData) {
-                // Check if data has changed
-                const dataChanged = JSON.stringify(newData) !== JSON.stringify({
-                    portfolio: portfolioData,
-                    services: servicesData,
-                    about: aboutData,
-                    contact: contactData,
-                    settings: settingsData,
-                    images: imagesData
+                // Check if key data has changed (simplified comparison)
+                const oldName = aboutData.name || '';
+                const newName = newData.about?.name || '';
+                const oldEmail = contactData.email || '';
+                const newEmail = newData.contact?.email || '';
+                
+                const dataChanged = oldName !== newName || oldEmail !== newEmail;
+                
+                console.log('Sync comparison:', {
+                    oldName, newName, 
+                    oldEmail, newEmail,
+                    dataChanged
                 });
                 
-                if (dataChanged) {
-                    console.log('Data changed, updating...');
+                if (dataChanged || !aboutData.name) {
+                    console.log('Data changed or first load, updating...');
                     portfolioData = newData.portfolio || portfolioData;
                     servicesData = newData.services || servicesData;
                     aboutData = newData.about || aboutData;
@@ -576,12 +580,15 @@ function startPeriodicSync() {
                     updatePortfolioContent();
                     updatePortfolioGrid();
                     updateServicesSection();
+                    console.log('UI updated with new data');
+                } else {
+                    console.log('No data changes detected');
                 }
             }
         } catch (error) {
             console.error('Periodic sync failed:', error);
         }
-    }, 10000); // 10 seconds
+    }, 5000); // 5 seconds for faster sync
 }
 
 // Initialize portfolio when page loads
@@ -639,12 +646,41 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 });
 
+// Manual sync function for immediate updates
+async function forceSyncNow() {
+    console.log('Manual sync triggered...');
+    try {
+        const newData = await apiService.getAllData();
+        if (newData) {
+            portfolioData = newData.portfolio || portfolioData;
+            servicesData = newData.services || servicesData;
+            aboutData = newData.about || aboutData;
+            contactData = newData.contact || contactData;
+            settingsData = newData.settings || settingsData;
+            imagesData = newData.images || imagesData;
+            
+            // Update UI
+            updatePortfolioContent();
+            updatePortfolioGrid();
+            updateServicesSection();
+            console.log('Manual sync completed');
+            return true;
+        }
+    } catch (error) {
+        console.error('Manual sync failed:', error);
+        return false;
+    }
+}
+
 // Clean up interval when page unloads
 window.addEventListener('beforeunload', () => {
     if (syncInterval) {
         clearInterval(syncInterval);
     }
 });
+
+// Make sync function globally available for testing
+window.forceSyncNow = forceSyncNow;
 
 // Rest of the original JavaScript for navigation, animations, etc.
 const hamburger = document.querySelector('.hamburger');
