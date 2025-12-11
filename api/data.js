@@ -1,0 +1,123 @@
+// Vercel Serverless Function for /api/data
+export default async function handler(req, res) {
+    // Set CORS headers
+    res.setHeader('Access-Control-Allow-Credentials', true);
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,PATCH,DELETE,POST,PUT');
+    res.setHeader('Access-Control-Allow-Headers', 'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version');
+    
+    if (req.method === 'OPTIONS') {
+        res.status(200).end();
+        return;
+    }
+
+    try {
+        // Default portfolio data
+        const defaultData = {
+            portfolio: [
+                {
+                    id: 1,
+                    title: 'Brand Identity Project',
+                    description: 'Complete brand identity for a tech startup',
+                    category: 'branding',
+                    image: 'fas fa-image'
+                },
+                {
+                    id: 2,
+                    title: 'Logo Design Collection',
+                    description: 'Modern logo designs for various industries',
+                    category: 'logo',
+                    image: 'fas fa-cube'
+                },
+                {
+                    id: 3,
+                    title: 'Print Design Campaign',
+                    description: 'Marketing materials and print advertisements',
+                    category: 'print',
+                    image: 'fas fa-print'
+                },
+                {
+                    id: 4,
+                    title: 'Digital Design Portfolio',
+                    description: 'Web and mobile app design projects',
+                    category: 'digital',
+                    image: 'fas fa-laptop'
+                },
+                {
+                    id: 5,
+                    title: 'Corporate Branding',
+                    description: 'Brand identity for corporate clients',
+                    category: 'branding',
+                    image: 'fas fa-briefcase'
+                },
+                {
+                    id: 6,
+                    title: 'Creative Logo Series',
+                    description: 'Innovative logo designs and concepts',
+                    category: 'logo',
+                    image: 'fas fa-star'
+                }
+            ],
+            services: [
+                {
+                    id: 1,
+                    title: 'Brand Identity',
+                    description: 'Complete brand identity design including logo, color palette, typography, and brand guidelines.',
+                    icon: 'fas fa-palette'
+                },
+                {
+                    id: 2,
+                    title: 'Logo Design',
+                    description: 'Custom logo design that captures your brand\'s essence and stands out in the market.',
+                    icon: 'fas fa-vector-square'
+                },
+                {
+                    id: 3,
+                    title: 'Print Design',
+                    description: 'Professional print materials including brochures, business cards, posters, and marketing collateral.',
+                    icon: 'fas fa-print'
+                },
+                {
+                    id: 4,
+                    title: 'Digital Design',
+                    description: 'Modern web and mobile app design with focus on user experience and visual appeal.',
+                    icon: 'fas fa-mobile-alt'
+                }
+            ],
+            about: {
+                name: 'Alex Chen',
+                profession: 'Creative Graphic Designer',
+                bio: 'Hello! I\'m Alex Chen, a passionate graphic designer with over 5 years of experience creating compelling visual identities, branding solutions, and digital experiences. I believe in the power of design to communicate, inspire, and transform.',
+                projects: '150',
+                clients: '50',
+                experience: '5',
+                skills: ['Brand Identity', 'Logo Design', 'Print Design', 'Digital Design', 'Adobe Creative Suite', 'Figma', 'UI/UX Design', 'Typography']
+            },
+            contact: {
+                email: 'alex.chen@email.com',
+                phone: '+1 (555) 123-4567',
+                location: 'New York, NY',
+                behance: '',
+                dribbble: '',
+                instagram: '',
+                linkedin: ''
+            },
+            settings: {
+                primaryColor: '#667eea',
+                secondaryColor: '#764ba2',
+                portfolioTitle: 'Alex Chen - Graphic Designer Portfolio',
+                portfolioDescription: 'A modern, responsive portfolio showcasing creative graphic design work and branding solutions.'
+            },
+            images: {
+                heroImage: null,
+                homeBackgroundImage: null,
+                backgroundOpacity: '50'
+            }
+        };
+
+        res.status(200).json(defaultData);
+    } catch (error) {
+        console.error('Error in /api/data:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+}
