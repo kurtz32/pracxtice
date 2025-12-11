@@ -27,9 +27,9 @@
 - [ ] 13. Test on mobile devices too
 
 ## Troubleshooting
-If you get runtime errors:
-- [ ] Check Node.js version >= 18.0.0
-- [ ] Verify `package.json` exists in root
+If you get build errors:
+- [ ] Verify all static files are in root directory
+- [ ] Check `vercel.json` has correct builds configuration
 - [ ] Run `vercel --prod` for production deployment
 - [ ] Check Vercel deployment logs
 
