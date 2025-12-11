@@ -2,8 +2,9 @@
 
 ## Pre-Deployment
 - [x] Created API endpoints in `api/` directory
-- [x] Added `vercel.json` configuration
-- [x] Configured CORS headers
+- [x] Added simplified `vercel.json` configuration
+- [x] Created package.json for Vercel
+- [x] Added .vercelignore file
 - [x] Created deployment documentation
 
 ## Deployment Steps
@@ -26,14 +27,15 @@
 - [ ] 13. Test on mobile devices too
 
 ## Troubleshooting
-If you get 404 errors:
-- [ ] Verify all files are in `api/` directory
-- [ ] Check `vercel.json` exists in root
+If you get runtime errors:
+- [ ] Check Node.js version >= 18.0.0
+- [ ] Verify `package.json` exists in root
 - [ ] Run `vercel --prod` for production deployment
 - [ ] Check Vercel deployment logs
 
 ## Success Criteria
 ✅ No 404 errors in browser console
+✅ No runtime errors in API calls
 ✅ Admin panel loads without API errors
 ✅ Changes made in admin appear on main portfolio
 ✅ Works across multiple devices/browsers
@@ -46,4 +48,5 @@ Replace `your-project` with your actual Vercel project name:
 - Portfolio: `https://your-project.vercel.app/index.html`
 
 ---
+**Runtime Error Fixed:** Updated `vercel.json` with correct Node.js runtime specification.
 **Need Help?** Check `README-VERCEL-DEPLOYMENT.md` for detailed instructions.
