@@ -1,6 +1,5 @@
 // Vercel Serverless Function for /api/settings
-import { promises as fs } from 'fs';
-import path from 'path';
+import { storage } from './storage.js';
 
 export default async function handler(req, res) {
     res.setHeader('Access-Control-Allow-Credentials', true);
@@ -13,46 +12,23 @@ export default async function handler(req, res) {
         return;
     }
 
-    const dataFilePath = path.join(process.cwd(), 'data.json');
-    const defaultSettings = {
-        primaryColor: '#667eea',
-        secondaryColor: '#764ba2',
-        portfolioTitle: 'Alex Chen - Graphic Designer Portfolio',
-        portfolioDescription: 'A modern, responsive portfolio showcasing creative graphic design work and branding solutions.'
-    };
-
     try {
         if (req.method === 'GET') {
-            try {
-                const fileData = await fs.readFile(dataFilePath, 'utf8');
-                const data = JSON.parse(fileData);
-                const settings = { ...defaultSettings, ...(data.settings || {}) };
-                res.status(200).json(settings);
-            } catch (error) {
-                res.status(200).json(defaultSettings);
-            }
+            const data = await storage.readData();
+            res.status(200).json(data.settings);
         } else if (req.method === 'POST') {
             const settingsData = req.body;
+            const success = await storage.writeData({ settings: settingsData });
             
-            try {
-                const fileData = await fs.readFile(dataFilePath, 'utf8');
-                const data = JSON.parse(fileData);
-                data.settings = { ...data.settings, ...settingsData };
-                await fs.writeFile(dataFilePath, JSON.stringify(data, null, 2));
-            } catch (error) {
-                // Create new data file if it doesn't exist
-                const newData = {
-                    portfolio: [],
-                    services: [],
-                    about: {},
-                    contact: {},
-                    settings: settingsData,
-                    images: {}
-                };
-                await fs.writeFile(dataFilePath, JSON.stringify(newData, null, 2));
+            if (success) {
+                res.status(200).json({ 
+                    success: true, 
+                    message: 'Settings updated successfully',
+                    environment: process.env.VERCEL ? 'serverless' : 'local'
+                });
+            } else {
+                res.status(500).json({ error: 'Failed to save data' });
             }
-            
-            res.status(200).json({ success: true, message: 'Settings updated successfully' });
         } else {
             res.status(405).json({ error: 'Method not allowed' });
         }

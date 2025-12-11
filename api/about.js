@@ -1,6 +1,5 @@
 // Vercel Serverless Function for /api/about
-import { promises as fs } from 'fs';
-import path from 'path';
+import { storage } from './storage.js';
 
 export default async function handler(req, res) {
     res.setHeader('Access-Control-Allow-Credentials', true);
@@ -13,49 +12,23 @@ export default async function handler(req, res) {
         return;
     }
 
-    const dataFilePath = path.join(process.cwd(), 'data.json');
-    const defaultAbout = {
-        name: 'Alex Chen',
-        profession: 'Creative Graphic Designer',
-        bio: 'Hello! I\'m Alex Chen, a passionate graphic designer with over 5 years of experience creating compelling visual identities, branding solutions, and digital experiences. I believe in the power of design to communicate, inspire, and transform.',
-        projects: '150',
-        clients: '50',
-        experience: '5',
-        skills: ['Brand Identity', 'Logo Design', 'Print Design', 'Digital Design', 'Adobe Creative Suite', 'Figma', 'UI/UX Design', 'Typography']
-    };
-
     try {
         if (req.method === 'GET') {
-            try {
-                const fileData = await fs.readFile(dataFilePath, 'utf8');
-                const data = JSON.parse(fileData);
-                const about = { ...defaultAbout, ...(data.about || {}) };
-                res.status(200).json(about);
-            } catch (error) {
-                res.status(200).json(defaultAbout);
-            }
+            const data = await storage.readData();
+            res.status(200).json(data.about);
         } else if (req.method === 'POST') {
             const aboutData = req.body;
+            const success = await storage.writeData({ about: aboutData });
             
-            try {
-                const fileData = await fs.readFile(dataFilePath, 'utf8');
-                const data = JSON.parse(fileData);
-                data.about = { ...data.about, ...aboutData };
-                await fs.writeFile(dataFilePath, JSON.stringify(data, null, 2));
-            } catch (error) {
-                // Create new data file if it doesn't exist
-                const newData = {
-                    portfolio: [],
-                    services: [],
-                    about: aboutData,
-                    contact: {},
-                    settings: {},
-                    images: {}
-                };
-                await fs.writeFile(dataFilePath, JSON.stringify(newData, null, 2));
+            if (success) {
+                res.status(200).json({ 
+                    success: true, 
+                    message: 'About section updated successfully',
+                    environment: process.env.VERCEL ? 'serverless' : 'local'
+                });
+            } else {
+                res.status(500).json({ error: 'Failed to save data' });
             }
-            
-            res.status(200).json({ success: true, message: 'About section updated successfully' });
         } else {
             res.status(405).json({ error: 'Method not allowed' });
         }

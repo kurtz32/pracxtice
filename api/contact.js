@@ -1,6 +1,5 @@
 // Vercel Serverless Function for /api/contact
-import { promises as fs } from 'fs';
-import path from 'path';
+import { storage } from './storage.js';
 
 export default async function handler(req, res) {
     res.setHeader('Access-Control-Allow-Credentials', true);
@@ -13,49 +12,23 @@ export default async function handler(req, res) {
         return;
     }
 
-    const dataFilePath = path.join(process.cwd(), 'data.json');
-    const defaultContact = {
-        email: 'alex.chen@email.com',
-        phone: '+1 (555) 123-4567',
-        location: 'New York, NY',
-        behance: '',
-        dribbble: '',
-        instagram: '',
-        linkedin: ''
-    };
-
     try {
         if (req.method === 'GET') {
-            try {
-                const fileData = await fs.readFile(dataFilePath, 'utf8');
-                const data = JSON.parse(fileData);
-                const contact = { ...defaultContact, ...(data.contact || {}) };
-                res.status(200).json(contact);
-            } catch (error) {
-                res.status(200).json(defaultContact);
-            }
+            const data = await storage.readData();
+            res.status(200).json(data.contact);
         } else if (req.method === 'POST') {
             const contactData = req.body;
+            const success = await storage.writeData({ contact: contactData });
             
-            try {
-                const fileData = await fs.readFile(dataFilePath, 'utf8');
-                const data = JSON.parse(fileData);
-                data.contact = { ...data.contact, ...contactData };
-                await fs.writeFile(dataFilePath, JSON.stringify(data, null, 2));
-            } catch (error) {
-                // Create new data file if it doesn't exist
-                const newData = {
-                    portfolio: [],
-                    services: [],
-                    about: {},
-                    contact: contactData,
-                    settings: {},
-                    images: {}
-                };
-                await fs.writeFile(dataFilePath, JSON.stringify(newData, null, 2));
+            if (success) {
+                res.status(200).json({ 
+                    success: true, 
+                    message: 'Contact information updated successfully',
+                    environment: process.env.VERCEL ? 'serverless' : 'local'
+                });
+            } else {
+                res.status(500).json({ error: 'Failed to save data' });
             }
-            
-            res.status(200).json({ success: true, message: 'Contact information updated successfully' });
         } else {
             res.status(405).json({ error: 'Method not allowed' });
         }

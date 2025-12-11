@@ -1,6 +1,5 @@
 // Vercel Serverless Function for /api/images
-import { promises as fs } from 'fs';
-import path from 'path';
+import { storage } from './storage.js';
 
 export default async function handler(req, res) {
     res.setHeader('Access-Control-Allow-Credentials', true);
@@ -13,45 +12,23 @@ export default async function handler(req, res) {
         return;
     }
 
-    const dataFilePath = path.join(process.cwd(), 'data.json');
-    const defaultImages = {
-        heroImage: null,
-        homeBackgroundImage: null,
-        backgroundOpacity: '50'
-    };
-
     try {
         if (req.method === 'GET') {
-            try {
-                const fileData = await fs.readFile(dataFilePath, 'utf8');
-                const data = JSON.parse(fileData);
-                const images = { ...defaultImages, ...(data.images || {}) };
-                res.status(200).json(images);
-            } catch (error) {
-                res.status(200).json(defaultImages);
-            }
+            const data = await storage.readData();
+            res.status(200).json(data.images);
         } else if (req.method === 'POST') {
             const imagesData = req.body;
+            const success = await storage.writeData({ images: imagesData });
             
-            try {
-                const fileData = await fs.readFile(dataFilePath, 'utf8');
-                const data = JSON.parse(fileData);
-                data.images = { ...data.images, ...imagesData };
-                await fs.writeFile(dataFilePath, JSON.stringify(data, null, 2));
-            } catch (error) {
-                // Create new data file if it doesn't exist
-                const newData = {
-                    portfolio: [],
-                    services: [],
-                    about: {},
-                    contact: {},
-                    settings: {},
-                    images: imagesData
-                };
-                await fs.writeFile(dataFilePath, JSON.stringify(newData, null, 2));
+            if (success) {
+                res.status(200).json({ 
+                    success: true, 
+                    message: 'Images updated successfully',
+                    environment: process.env.VERCEL ? 'serverless' : 'local'
+                });
+            } else {
+                res.status(500).json({ error: 'Failed to save data' });
             }
-            
-            res.status(200).json({ success: true, message: 'Images updated successfully' });
         } else {
             res.status(405).json({ error: 'Method not allowed' });
         }
