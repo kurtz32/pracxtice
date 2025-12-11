@@ -10,6 +10,55 @@ let imagesData = {};
 let API_BASE_URL = window.location.origin;
 let syncInterval = null;
 
+// Initialize portfolio when page loads
+document.addEventListener('DOMContentLoaded', async () => {
+    console.log('Portfolio page initializing...');
+    
+    try {
+        // Load data from API
+        await loadData();
+        
+        // Update content with loaded data
+        updatePortfolioContent();
+        updatePortfolioGrid();
+        updateServicesSection();
+        
+        // Bind events for dynamic content
+        bindPortfolioEvents();
+        
+        console.log('Portfolio page initialization completed');
+        
+    } catch (error) {
+        console.error('Failed to initialize portfolio:', error);
+        // Fallback to default data if API fails
+        loadDefaultData();
+        updatePortfolioContent();
+        updatePortfolioGrid();
+        updateServicesSection();
+        bindPortfolioEvents();
+    }
+});
+
+// Refresh data when page becomes visible again (e.g., when user returns from admin panel)
+document.addEventListener('visibilitychange', async () => {
+    if (!document.hidden) {
+        console.log('Page became visible, refreshing data...');
+        await loadData();
+        updatePortfolioContent();
+        updatePortfolioGrid();
+        updateServicesSection();
+    }
+});
+
+// Also refresh data when window gets focus (in case visibilitychange doesn't work)
+window.addEventListener('focus', async () => {
+    console.log('Window got focus, refreshing data...');
+    await loadData();
+    updatePortfolioContent();
+    updatePortfolioGrid();
+    updateServicesSection();
+});
+
 // API Service Functions
 const apiService = {
     async request(endpoint, options = {}) {
