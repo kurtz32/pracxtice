@@ -9,10 +9,16 @@ let settingsData = {};
 let imagesData = {};
 let API_BASE_URL = window.location.origin;
 let syncInterval = null;
+let isRefreshing = false;
+let lastRefreshTime = 0;
+const REFRESH_COOLDOWN = 2000; // 2 seconds between refreshes
 
 // Initialize portfolio when page loads
 document.addEventListener('DOMContentLoaded', async () => {
     console.log('Portfolio page initializing...');
+    
+    // Clean up any existing intervals/timeouts
+    cleanupExistingTimers();
     
     try {
         // Load data from API
@@ -39,24 +45,43 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 });
 
+// Cleanup function to prevent conflicts
+function cleanupExistingTimers() {
+    if (window.visibilityTimeout) {
+        clearTimeout(window.visibilityTimeout);
+        window.visibilityTimeout = null;
+    }
+    if (window.focusTimeout) {
+        clearTimeout(window.focusTimeout);
+        window.focusTimeout = null;
+    }
+    if (syncInterval) {
+        clearInterval(syncInterval);
+        syncInterval = null;
+    }
+    console.log('Cleaned up existing timers');
+}
+
 // Refresh data when page becomes visible again (e.g., when user returns from admin panel)
 document.addEventListener('visibilitychange', async () => {
     if (!document.hidden) {
         console.log('Page became visible, refreshing data...');
-        await loadData();
-        updatePortfolioContent();
-        updatePortfolioGrid();
-        updateServicesSection();
+        // Use a debounced refresh to prevent too frequent updates
+        clearTimeout(window.visibilityTimeout);
+        window.visibilityTimeout = setTimeout(async () => {
+            await refreshPageData();
+        }, 800);
     }
 });
 
 // Also refresh data when window gets focus (in case visibilitychange doesn't work)
 window.addEventListener('focus', async () => {
     console.log('Window got focus, refreshing data...');
-    await loadData();
-    updatePortfolioContent();
-    updatePortfolioGrid();
-    updateServicesSection();
+    // Use a debounced refresh to prevent too frequent updates
+    clearTimeout(window.focusTimeout);
+    window.focusTimeout = setTimeout(async () => {
+        await refreshPageData();
+    }, 1500);
 });
 
 // API Service Functions
@@ -84,31 +109,38 @@ const apiService = {
     },
 
     async getAllData() {
-        return await this.request('/data');
+        const result = await this.request('/data');
+        return result;
     },
 
     async getPortfolio() {
-        return await this.request('/portfolio');
+        const result = await this.request('/portfolio');
+        return result;
     },
 
     async getServices() {
-        return await this.request('/services');
+        const result = await this.request('/services');
+        return result;
     },
 
     async getAbout() {
-        return await this.request('/about');
+        const result = await this.request('/about');
+        return result;
     },
 
     async getContact() {
-        return await this.request('/contact');
+        const result = await this.request('/contact');
+        return result;
     },
 
     async getSettings() {
-        return await this.request('/settings');
+        const result = await this.request('/settings');
+        return result;
     },
 
     async getImages() {
-        return await this.request('/images');
+        const result = await this.request('/images');
+        return result;
     }
 };
 
@@ -174,13 +206,13 @@ function getDefaultImages() {
     };
 }
 
-// Load data with retry logic
+// Load data with retry logic and better error handling
 async function loadData() {
     try {
         console.log('Loading data from API...');
         
-        // Load all data in parallel
-        const [portfolio, services, about, contact, settings, images] = await Promise.all([
+        // Load all data in parallel with error handling for each
+        const results = await Promise.allSettled([
             apiService.getPortfolio(),
             apiService.getServices(),
             apiService.getAbout(),
@@ -189,19 +221,22 @@ async function loadData() {
             apiService.getImages()
         ]);
 
+        const [portfolioResult, servicesResult, aboutResult, contactResult, settingsResult, imagesResult] = results;
+
         // Update global variables with API data (fallback to defaults if API fails)
-        portfolioData = portfolio || getDefaultPortfolio();
-        servicesData = services || getDefaultServices();
-        aboutData = about || getDefaultAbout();
-        contactData = contact || getDefaultContact();
-        settingsData = settings || getDefaultSettings();
-        imagesData = images || getDefaultImages();
+        portfolioData = portfolioResult.status === 'fulfilled' ? (portfolioResult.value || getDefaultPortfolio()) : getDefaultPortfolio();
+        servicesData = servicesResult.status === 'fulfilled' ? (servicesResult.value || getDefaultServices()) : getDefaultServices();
+        aboutData = aboutResult.status === 'fulfilled' ? (aboutResult.value || getDefaultAbout()) : getDefaultAbout();
+        contactData = contactResult.status === 'fulfilled' ? (contactResult.value || getDefaultContact()) : getDefaultContact();
+        settingsData = settingsResult.status === 'fulfilled' ? (settingsResult.value || getDefaultSettings()) : getDefaultSettings();
+        imagesData = imagesResult.status === 'fulfilled' ? (imagesResult.value || getDefaultImages()) : getDefaultImages();
         
         console.log('Data loaded successfully:', {
             portfolio: portfolioData.length,
             services: servicesData.length,
             hasAbout: !!aboutData.name,
-            hasContact: !!contactData.email
+            hasContact: !!contactData.email,
+            apiResults: results.map(r => r.status)
         });
         
     } catch (error) {
@@ -607,11 +642,13 @@ async function forceSyncNow() {
             settingsData = newData.settings || settingsData;
             imagesData = newData.images || imagesData;
             
-            // Update UI
-            updatePortfolioContent();
-            updatePortfolioGrid();
-            updateServicesSection();
-            console.log('Manual sync completed');
+            // Update UI with slight delay to ensure data is properly set
+            setTimeout(() => {
+                updatePortfolioContent();
+                updatePortfolioGrid();
+                updateServicesSection();
+                console.log('Manual sync completed');
+            }, 100);
             return true;
         }
     } catch (error) {
@@ -620,8 +657,40 @@ async function forceSyncNow() {
     }
 }
 
+// Centralized refresh function to prevent conflicts
+async function refreshPageData() {
+    // Prevent multiple simultaneous refreshes
+    if (isRefreshing) {
+        console.log('Refresh already in progress, skipping...');
+        return;
+    }
+    
+    // Check cooldown period
+    const now = Date.now();
+    if (now - lastRefreshTime < REFRESH_COOLDOWN) {
+        console.log('Refresh too recent, skipping...');
+        return;
+    }
+    
+    isRefreshing = true;
+    lastRefreshTime = now;
+    
+    try {
+        await loadData();
+        updatePortfolioContent();
+        updatePortfolioGrid();
+        updateServicesSection();
+        console.log('Page data refreshed successfully');
+    } catch (error) {
+        console.error('Failed to refresh page data:', error);
+    } finally {
+        isRefreshing = false;
+    }
+}
+
 // Make sync function globally available for testing
 window.forceSyncNow = forceSyncNow;
+window.refreshPageData = refreshPageData;
 
 // Rest of the original JavaScript for navigation, animations, etc.
 const hamburger = document.querySelector('.hamburger');
