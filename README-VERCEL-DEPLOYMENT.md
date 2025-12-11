@@ -22,8 +22,9 @@ I've created Vercel-compatible serverless functions that replicate your API endp
 - `api/health.js` - Health check
 
 ### Configuration Files:
-- `vercel.json` - Vercel deployment configuration
-- CORS headers configured for cross-origin requests
+- `vercel.json` - Vercel deployment configuration (simplified)
+- `.vercelignore` - Excludes unnecessary files
+- CORS headers handled in each API function
 
 ## Deployment Instructions
 
