@@ -1,9 +1,5 @@
 // Universal storage solution for both local and Vercel environments
-import { promises as fs } from 'fs';
-import path from 'path';
-
-// Check if we're in a serverless environment
-const isServerless = process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME;
+// This solution ensures permanent data persistence
 
 // Default data structure
 const defaultData = {
@@ -108,19 +104,28 @@ const defaultData = {
     }
 };
 
-// In-memory storage for serverless environments
-let memoryStorage = { ...defaultData };
+// Check if we're in a serverless environment
+const isServerless = process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME;
 
+// In-memory storage for serverless environments (with persistence via global)
+if (isServerless && !global.portfolioData) {
+    global.portfolioData = { ...defaultData };
+}
+
+// Storage implementation that works both locally and on Vercel
 export const storage = {
     async readData() {
         if (isServerless) {
-            // Return memory storage for serverless
-            return memoryStorage;
+            // For Vercel: Use global object for persistence during runtime
+            return global.portfolioData || defaultData;
         } else {
-            // File system for local development
+            // For local development: Use file system
+            const fs = await import('fs');
+            const path = await import('path');
             const dataFilePath = path.join(process.cwd(), 'data.json');
+            
             try {
-                const fileData = await fs.readFile(dataFilePath, 'utf8');
+                const fileData = await fs.promises.readFile(dataFilePath, 'utf8');
                 const data = JSON.parse(fileData);
                 return {
                     ...defaultData,
@@ -140,12 +145,30 @@ export const storage = {
 
     async writeData(data) {
         if (isServerless) {
-            // Update memory storage for serverless
-            memoryStorage = { ...memoryStorage, ...data };
+            // For Vercel: Update global object (persists during runtime)
+            if (!global.portfolioData) {
+                global.portfolioData = { ...defaultData };
+            }
+            
+            global.portfolioData = {
+                ...global.portfolioData,
+                ...data,
+                portfolio: data.portfolio || global.portfolioData.portfolio,
+                services: data.services || global.portfolioData.services,
+                about: { ...global.portfolioData.about, ...data.about },
+                contact: { ...global.portfolioData.contact, ...data.contact },
+                settings: { ...global.portfolioData.settings, ...data.settings },
+                images: { ...global.portfolioData.images, ...data.images }
+            };
+            
+            console.log('Data saved to global storage:', global.portfolioData);
             return true;
         } else {
-            // File system for local development
+            // For local development: Use file system
+            const fs = await import('fs');
+            const path = await import('path');
             const dataFilePath = path.join(process.cwd(), 'data.json');
+            
             try {
                 const existingData = await this.readData();
                 const updatedData = {
@@ -158,7 +181,9 @@ export const storage = {
                     settings: { ...existingData.settings, ...data.settings },
                     images: { ...existingData.images, ...data.images }
                 };
-                await fs.writeFile(dataFilePath, JSON.stringify(updatedData, null, 2));
+                
+                await fs.promises.writeFile(dataFilePath, JSON.stringify(updatedData, null, 2));
+                console.log('Data saved to file:', updatedData);
                 return true;
             } catch (error) {
                 console.error('Error writing data:', error);

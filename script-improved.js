@@ -545,107 +545,6 @@ function bindPortfolioEvents() {
     });
 }
 
-// Sync data periodically
-function startPeriodicSync() {
-    // Sync every 5 seconds to catch any changes made by admin panel (faster sync)
-    syncInterval = setInterval(async () => {
-        try {
-            console.log('Periodic sync check...');
-            const newData = await apiService.getAllData();
-            if (newData) {
-                // Check if key data has changed (simplified comparison)
-                const oldName = aboutData.name || '';
-                const newName = newData.about?.name || '';
-                const oldEmail = contactData.email || '';
-                const newEmail = newData.contact?.email || '';
-                
-                const dataChanged = oldName !== newName || oldEmail !== newEmail;
-                
-                console.log('Sync comparison:', {
-                    oldName, newName, 
-                    oldEmail, newEmail,
-                    dataChanged
-                });
-                
-                if (dataChanged || !aboutData.name) {
-                    console.log('Data changed or first load, updating...');
-                    portfolioData = newData.portfolio || portfolioData;
-                    servicesData = newData.services || servicesData;
-                    aboutData = newData.about || aboutData;
-                    contactData = newData.contact || contactData;
-                    settingsData = newData.settings || settingsData;
-                    imagesData = newData.images || imagesData;
-                    
-                    // Update UI
-                    updatePortfolioContent();
-                    updatePortfolioGrid();
-                    updateServicesSection();
-                    console.log('UI updated with new data');
-                } else {
-                    console.log('No data changes detected');
-                }
-            }
-        } catch (error) {
-            console.error('Periodic sync failed:', error);
-        }
-    }, 5000); // 5 seconds for faster sync
-}
-
-// Initialize portfolio when page loads
-document.addEventListener('DOMContentLoaded', async () => {
-    console.log('Portfolio page initializing...');
-    
-    try {
-        // Load data from API
-        await loadData();
-        
-        // Update content with loaded data
-        updatePortfolioContent();
-        updatePortfolioGrid();
-        updateServicesSection();
-        
-        // Bind events for dynamic content
-        bindPortfolioEvents();
-        
-        // Start periodic sync to catch admin panel changes
-        startPeriodicSync();
-        
-        // Start counter animation when stats section is visible
-        const statsSection = document.querySelector('.about-stats');
-        if (statsSection) {
-            const statsObserver = new IntersectionObserver((entries) => {
-                entries.forEach(entry => {
-                    if (entry.isIntersecting) {
-                        animateCounters();
-                        statsObserver.unobserve(entry.target);
-                    }
-                });
-            });
-            
-            statsObserver.observe(statsSection);
-        }
-        
-        console.log('Portfolio page initialization completed');
-        
-        // Force update after a short delay to ensure DOM is ready
-        setTimeout(() => {
-            console.log('Forcing content update after delay...');
-            updatePortfolioContent();
-            updatePortfolioGrid();
-            updateServicesSection();
-        }, 1000);
-        
-    } catch (error) {
-        console.error('Failed to initialize portfolio:', error);
-        // Fallback to default data if API fails
-        loadDefaultData();
-        updatePortfolioContent();
-        updatePortfolioGrid();
-        updateServicesSection();
-        bindPortfolioEvents();
-    }
-});
-
 // Manual sync function for immediate updates
 async function forceSyncNow() {
     console.log('Manual sync triggered...');
@@ -671,13 +570,6 @@ async function forceSyncNow() {
         return false;
     }
 }
-
-// Clean up interval when page unloads
-window.addEventListener('beforeunload', () => {
-    if (syncInterval) {
-        clearInterval(syncInterval);
-    }
-});
 
 // Make sync function globally available for testing
 window.forceSyncNow = forceSyncNow;
