@@ -434,11 +434,18 @@ function updateSkillsSection() {
 // Update hero image
 function updateHeroImage() {
     const heroImageContainer = document.getElementById('heroImageContainer');
-    if (!heroImageContainer) return;
+    if (!heroImageContainer) {
+        console.log('Hero image container not found');
+        return;
+    }
+    
+    console.log('Updating hero image with data:', imagesData.heroImage ? 'Image found' : 'No image');
     
     if (imagesData.heroImage) {
         heroImageContainer.innerHTML = `
-            <img src="${imagesData.heroImage}" alt="Hero Image" class="hero-image-loaded">
+            <img src="${imagesData.heroImage}" alt="Hero Image" class="hero-image-loaded" 
+                 onload="console.log('Hero image loaded successfully')"
+                 onerror="console.error('Hero image failed to load')">
         `;
     } else {
         // Show placeholder
@@ -453,19 +460,27 @@ function updateHeroImage() {
 // Update hero section background
 function updateHomeBackground() {
     const heroSection = document.querySelector('.hero');
-    if (!heroSection) return;
+    if (!heroSection) {
+        console.log('Hero section not found');
+        return;
+    }
     
     const backgroundOpacity = imagesData.backgroundOpacity || '50';
     const opacityValue = parseInt(backgroundOpacity) / 100;
     
+    console.log('Updating background with opacity:', backgroundOpacity, 'Has background:', !!imagesData.homeBackgroundImage);
+    
     if (imagesData.homeBackgroundImage) {
         // Apply background image with overlay and opacity
-        heroSection.style.background = `url(${imagesData.homeBackgroundImage}) center center / cover no-repeat, linear-gradient(135deg, rgba(245, 247, 250, ${1 - opacityValue}) 0%, rgba(195, 207, 226, ${1 - opacityValue}) 100%)`;
+        const backgroundStyle = `url(${imagesData.homeBackgroundImage}) center center / cover no-repeat, linear-gradient(135deg, rgba(245, 247, 250, ${1 - opacityValue}) 0%, rgba(195, 207, 226, ${1 - opacityValue}) 100%)`;
+        heroSection.style.background = backgroundStyle;
         heroSection.style.backgroundBlendMode = 'overlay';
+        console.log('Applied background image with custom styling');
     } else {
         // Reset to default gradient
         heroSection.style.background = 'linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)';
         heroSection.style.backgroundBlendMode = 'normal';
+        console.log('Applied default gradient background');
     }
 }
 
@@ -676,11 +691,20 @@ async function refreshPageData() {
     lastRefreshTime = now;
     
     try {
+        console.log('Starting page data refresh...');
         await loadData();
+        
+        // Update all content
         updatePortfolioContent();
         updatePortfolioGrid();
         updateServicesSection();
-        console.log('Page data refreshed successfully');
+        
+        // Specifically refresh images with additional logging
+        console.log('Refreshing images specifically...');
+        updateHeroImage();
+        updateHomeBackground();
+        
+        console.log('Page data refreshed successfully with images');
     } catch (error) {
         console.error('Failed to refresh page data:', error);
     } finally {
@@ -691,6 +715,20 @@ async function refreshPageData() {
 // Make sync function globally available for testing
 window.forceSyncNow = forceSyncNow;
 window.refreshPageData = refreshPageData;
+
+// Listen for storage events from admin panel
+window.addEventListener('storage', (e) => {
+    if (e.key === 'portfolio_refresh') {
+        console.log('Refresh triggered by admin panel');
+        refreshPageData();
+    }
+});
+
+// Force immediate refresh function for admin panel calls
+window.forceRefreshNow = async function() {
+    console.log('Force refresh called from admin panel');
+    await refreshPageData();
+};
 
 // Rest of the original JavaScript for navigation, animations, etc.
 const hamburger = document.querySelector('.hamburger');

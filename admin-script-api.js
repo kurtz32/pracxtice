@@ -118,15 +118,30 @@ const apiService = {
         });
     },
 
+    // Helper method to convert file to base64
+    async fileToBase64(file) {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = () => resolve(reader.result);
+            reader.onerror = reject;
+            reader.readAsDataURL(file);
+        });
+    },
+
     // Image upload methods
     async uploadHeroImage(file) {
-        const formData = new FormData();
-        formData.append('image', file);
-
         try {
+            const imageData = await this.fileToBase64(file);
+            
             const response = await fetch(`${API_BASE_URL}/api/upload/hero`, {
                 method: 'POST',
-                body: formData
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    imageData: imageData,
+                    mimeType: file.type
+                })
             });
 
             if (!response.ok) {
@@ -141,13 +156,18 @@ const apiService = {
     },
 
     async uploadBackgroundImage(file) {
-        const formData = new FormData();
-        formData.append('image', file);
-
         try {
+            const imageData = await this.fileToBase64(file);
+            
             const response = await fetch(`${API_BASE_URL}/api/upload/background`, {
                 method: 'POST',
-                body: formData
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    imageData: imageData,
+                    mimeType: file.type
+                })
             });
 
             if (!response.ok) {
@@ -836,7 +856,33 @@ async function handleHeroImageUpload(e) {
         const response = await apiService.uploadHeroImage(file);
         if (response.success) {
             updateHeroImagePreview(response.imageData);
-            showMessage('Hero image uploaded successfully!', 'success');
+            showMessage('Hero image uploaded successfully! Changes will appear on the main page within 2 seconds.', 'success');
+            
+            // Force refresh the main page images after a short delay
+            setTimeout(async () => {
+                try {
+                    // Trigger refresh of main page if it's open as popup
+                    if (window.opener && !window.opener.closed) {
+                        // Call the main page's refresh function directly
+                        if (window.opener.forceRefreshNow) {
+                            window.opener.forceRefreshNow();
+                        } else if (window.opener.refreshPageData) {
+                            window.opener.refreshPageData();
+                        } else {
+                            window.opener.location.reload();
+                        }
+                    } else {
+                        // If not a popup, try to refresh via localStorage event
+                        localStorage.setItem('portfolio_refresh', Date.now().toString());
+                        // Also try to refresh the current page if it's the main page
+                        if (window.location.pathname === '/' || window.location.pathname === '/index.html') {
+                            window.location.reload();
+                        }
+                    }
+                } catch (refreshError) {
+                    console.log('Could not refresh main page:', refreshError);
+                }
+            }, 1000);
         }
     } catch (error) {
         showMessage('Failed to upload hero image', 'error');
@@ -872,7 +918,19 @@ async function removeHeroImage() {
         removeBtn.style.display = 'none';
         fileInput.value = '';
         
-        showMessage('Hero image removed successfully!', 'success');
+        showMessage('Hero image removed successfully! Changes will appear on the main page within 2 seconds.', 'success');
+        
+        // Force refresh the main page after a short delay
+        setTimeout(async () => {
+            try {
+                // Trigger refresh of main page if it's open
+                if (window.opener && !window.opener.closed) {
+                    window.opener.location.reload();
+                }
+            } catch (refreshError) {
+                console.log('Could not refresh main page:', refreshError);
+            }
+        }, 1000);
     } catch (error) {
         showMessage('Failed to remove hero image', 'error');
     }
@@ -910,7 +968,33 @@ async function handleHomeBackgroundUpload(e) {
         const response = await apiService.uploadBackgroundImage(file);
         if (response.success) {
             updateHomeBackgroundPreview(response.imageData);
-            showMessage('Home background uploaded successfully!', 'success');
+            showMessage('Home background uploaded successfully! Changes will appear on the main page within 2 seconds.', 'success');
+            
+            // Force refresh the main page images after a short delay
+            setTimeout(async () => {
+                try {
+                    // Trigger refresh of main page if it's open as popup
+                    if (window.opener && !window.opener.closed) {
+                        // Call the main page's refresh function directly
+                        if (window.opener.forceRefreshNow) {
+                            window.opener.forceRefreshNow();
+                        } else if (window.opener.refreshPageData) {
+                            window.opener.refreshPageData();
+                        } else {
+                            window.opener.location.reload();
+                        }
+                    } else {
+                        // If not a popup, try to refresh via localStorage event
+                        localStorage.setItem('portfolio_refresh', Date.now().toString());
+                        // Also try to refresh the current page if it's the main page
+                        if (window.location.pathname === '/' || window.location.pathname === '/index.html') {
+                            window.location.reload();
+                        }
+                    }
+                } catch (refreshError) {
+                    console.log('Could not refresh main page:', refreshError);
+                }
+            }, 1000);
         }
     } catch (error) {
         showMessage('Failed to upload background image', 'error');
@@ -946,7 +1030,19 @@ async function removeHomeBackground() {
         removeBtn.style.display = 'none';
         fileInput.value = '';
         
-        showMessage('Home background removed successfully!', 'success');
+        showMessage('Home background removed successfully! Changes will appear on the main page within 2 seconds.', 'success');
+        
+        // Force refresh the main page after a short delay
+        setTimeout(async () => {
+            try {
+                // Trigger refresh of main page if it's open
+                if (window.opener && !window.opener.closed) {
+                    window.opener.location.reload();
+                }
+            } catch (refreshError) {
+                console.log('Could not refresh main page:', refreshError);
+            }
+        }, 1000);
     } catch (error) {
         showMessage('Failed to remove background image', 'error');
     }
