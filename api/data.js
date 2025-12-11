@@ -1,4 +1,7 @@
 // Vercel Serverless Function for /api/data
+import { promises as fs } from 'fs';
+import path from 'path';
+
 export default async function handler(req, res) {
     // Set CORS headers
     res.setHeader('Access-Control-Allow-Credentials', true);
@@ -11,8 +14,10 @@ export default async function handler(req, res) {
         return;
     }
 
+    const dataFilePath = path.join(process.cwd(), 'data.json');
+
     try {
-        // Default portfolio data
+        // Default data structure
         const defaultData = {
             portfolio: [
                 {
@@ -115,7 +120,70 @@ export default async function handler(req, res) {
             }
         };
 
-        res.status(200).json(defaultData);
+        if (req.method === 'GET') {
+            try {
+                // Try to read existing data file
+                const fileData = await fs.readFile(dataFilePath, 'utf8');
+                const existingData = JSON.parse(fileData);
+                
+                // Merge with default data to ensure all fields exist
+                const mergedData = {
+                    ...defaultData,
+                    ...existingData,
+                    portfolio: existingData.portfolio || defaultData.portfolio,
+                    services: existingData.services || defaultData.services,
+                    about: { ...defaultData.about, ...existingData.about },
+                    contact: { ...defaultData.contact, ...existingData.contact },
+                    settings: { ...defaultData.settings, ...existingData.settings },
+                    images: { ...defaultData.images, ...existingData.images }
+                };
+                
+                res.status(200).json(mergedData);
+            } catch (error) {
+                // If file doesn't exist or can't be read, return default data
+                console.log('Data file not found or invalid, using defaults');
+                res.status(200).json(defaultData);
+            }
+        } else if (req.method === 'POST') {
+            // For updates, merge the incoming data with existing data
+            try {
+                const fileData = await fs.readFile(dataFilePath, 'utf8');
+                const existingData = JSON.parse(fileData);
+                
+                const incomingData = req.body;
+                const updatedData = {
+                    ...existingData,
+                    ...incomingData,
+                    portfolio: incomingData.portfolio || existingData.portfolio,
+                    services: incomingData.services || existingData.services,
+                    about: { ...existingData.about, ...incomingData.about },
+                    contact: { ...existingData.contact, ...incomingData.contact },
+                    settings: { ...existingData.settings, ...incomingData.settings },
+                    images: { ...existingData.images, ...incomingData.images }
+                };
+                
+                await fs.writeFile(dataFilePath, JSON.stringify(updatedData, null, 2));
+                res.status(200).json({ success: true, message: 'Data updated successfully' });
+            } catch (error) {
+                // If file doesn't exist, create it with the incoming data
+                const incomingData = req.body;
+                const newData = {
+                    ...defaultData,
+                    ...incomingData,
+                    portfolio: incomingData.portfolio || defaultData.portfolio,
+                    services: incomingData.services || defaultData.services,
+                    about: { ...defaultData.about, ...incomingData.about },
+                    contact: { ...defaultData.contact, ...incomingData.contact },
+                    settings: { ...defaultData.settings, ...incomingData.settings },
+                    images: { ...defaultData.images, ...incomingData.images }
+                };
+                
+                await fs.writeFile(dataFilePath, JSON.stringify(newData, null, 2));
+                res.status(200).json({ success: true, message: 'Data created successfully' });
+            }
+        } else {
+            res.status(405).json({ error: 'Method not allowed' });
+        }
     } catch (error) {
         console.error('Error in /api/data:', error);
         res.status(500).json({ error: 'Internal server error' });
