@@ -175,6 +175,8 @@ function loadDefaultData() {
 // Update portfolio content dynamically
 function updatePortfolioContent() {
     console.log('Updating portfolio content...');
+    console.log('About data:', aboutData);
+    console.log('Contact data:', contactData);
     
     // Update navigation logo
     if (aboutData.name) {
@@ -182,7 +184,11 @@ function updatePortfolioContent() {
         if (logoElement) {
             logoElement.textContent = aboutData.name;
             console.log('Updated logo:', aboutData.name);
+        } else {
+            console.log('Logo element not found');
         }
+    } else {
+        console.log('No about data name found');
     }
     
     // Update hero section
@@ -613,6 +619,15 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
         
         console.log('Portfolio page initialization completed');
+        
+        // Force update after a short delay to ensure DOM is ready
+        setTimeout(() => {
+            console.log('Forcing content update after delay...');
+            updatePortfolioContent();
+            updatePortfolioGrid();
+            updateServicesSection();
+        }, 1000);
+        
     } catch (error) {
         console.error('Failed to initialize portfolio:', error);
         // Fallback to default data if API fails

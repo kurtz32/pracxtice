@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Force Update Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .btn { padding: 10px 20px; margin: 10px; background: #007bff; color: white; border: none; cursor: pointer; }
+        .result { margin: 10px 0; padding: 10px; background: #f8f9fa; border: 1px solid #dee2e6; }
+    </style>
+</head>
+<body>
+    <h1>Force Update Test</h1>
+    <p>This page will test if the API data is being loaded and applied to the page.</p>
+    
+    <button class="btn" onclick="testAPI()">Test API Connection</button>
+    <button class="btn" onclick="forceUpdate()">Force Update Page</button>
+    <button class="btn" onclick="openMainPage()">Open Main Page</button>
+    
+    <div id="results"></div>
+
+    <script>
+        const API_BASE_URL = window.location.origin;
+        
+        function log(message) {
+            console.log(message);
+            const results = document.getElementById('results');
+            results.innerHTML += '<div class="result">' + message + '</div>';
+        }
+        
+        async function testAPI() {
+            log('Testing API connection...');
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/data`);
+                const data = await response.json();
+                
+                log('✅ API connection successful');
+                log('📊 About data: ' + JSON.stringify(data.about, null, 2));
+                log('📧 Contact data: ' + JSON.stringify(data.contact, null, 2));
+                
+                return data;
+            } catch (error) {
+                log('❌ API connection failed: ' + error.message);
+                return null;
+            }
+        }
+        
+        async function forceUpdate() {
+            log('Forcing page update...');
+            
+            const data = await testAPI();
+            if (!data) return;
+            
+            // Update the page with API data
+            updatePageContent(data);
+        }
+        
+        function updatePageContent(data) {
+            log('Updating page content...');
+            
+            // Update name in navigation
+            const logoElement = document.querySelector('.logo h2');
+            if (logoElement && data.about?.name) {
+                const oldName = logoElement.textContent;
+                logoElement.textContent = data.about.name;
+                log(`Updated navigation name: ${oldName} → ${data.about.name}`);
+            }
+            
+            // Update hero title
+            const heroTitle = document.querySelector('.hero-content h1');
+            if (heroTitle && data.about?.profession) {
+                const oldTitle = heroTitle.textContent;
+                heroTitle.textContent = data.about.profession;
+                log(`Updated hero title: ${oldTitle} → ${data.about.profession}`);
+            }
+            
+            // Update hero bio
+            const heroBio = document.querySelector('.hero-content p');
+            if (heroBio && data.about?.bio) {
+                const oldBio = heroBio.textContent.substring(0, 50) + '...';
+                heroBio.textContent = data.about.bio;
+                log(`Updated hero bio: ${oldBio} → ${data.about.bio.substring(0, 50)}...`);
+            }
+            
+            // Update about title
+            const aboutTitle = document.querySelector('.about-text h2');
+            if (aboutTitle && data.about?.name) {
+                const oldAboutTitle = aboutTitle.textContent;
+                aboutTitle.textContent = 'About ' + data.about.name;
+                log(`Updated about title: ${oldAboutTitle} → ${data.about.name}`);
+            }
+            
+            // Update about bio
+            const aboutBio = document.querySelector('.about-text p');
+            if (aboutBio && data.about?.bio) {
+                const oldAboutBio = aboutBio.textContent.substring(0, 50) + '...';
+                aboutBio.textContent = data.about.bio;
+                log(`Updated about bio: ${oldAboutBio} → ${data.about.bio.substring(0, 50)}...`);
+            }
+            
+            // Update contact info
+            const emailElement = document.querySelector('.contact-item:nth-child(1) span');
+            if (emailElement && data.contact?.email) {
+                const oldEmail = emailElement.textContent;
+                emailElement.textContent = data.contact.email;
+                log(`Updated email: ${oldEmail} → ${data.contact.email}`);
+            }
+            
+            const phoneElement = document.querySelector('.contact-item:nth-child(2) span');
+            if (phoneElement && data.contact?.phone) {
+                const oldPhone = phoneElement.textContent;
+                phoneElement.textContent = data.contact.phone;
+                log(`Updated phone: ${oldPhone} → ${data.contact.phone}`);
+            }
+            
+            const locationElement = document.querySelector('.contact-item:nth-child(3) span');
+            if (locationElement && data.contact?.location) {
+                const oldLocation = locationElement.textContent;
+                locationElement.textContent = data.contact.location;
+                log(`Updated location: ${oldLocation} → ${data.contact.location}`);
+            }
+            
+            // Update footer
+            const footerElement = document.querySelector('.footer p');
+            if (footerElement && data.about?.name) {
+                const currentYear = new Date().getFullYear();
+                const oldFooter = footerElement.textContent;
+                footerElement.textContent = `© ${currentYear} ${data.about.name}. All rights reserved.`;
+                log(`Updated footer: ${oldFooter} → ${footerElement.textContent}`);
+            }
+            
+            log('✅ Page content update completed');
+        }
+        
+        function openMainPage() {
+            window.open('/index.html', '_blank');
+            log('Opened main page in new tab');
+        }
+        
+        // Auto-test when page loads
+        window.addEventListener('load', function() {
+            log('Page loaded, starting tests...');
+            testAPI();
+        });
+    </script>
+</body>
+</html>
