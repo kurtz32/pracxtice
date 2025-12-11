@@ -1,0 +1,14 @@
+# Portfolio Images Directory
+
+Place your portfolio project images in this directory.
+
+Recommended image specifications:
+- Format: JPG or PNG
+- Size: 800x600px (minimum)
+- Naming: Use descriptive names like "brand-identity-project.jpg"
+
+Image categories should match the filter buttons:
+- branding/
+- logo-design/
+- print-design/
+- digital-design/

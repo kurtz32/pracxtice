@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Portfolio Admin Panel</title>
+    <link rel="stylesheet" href="admin-styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        .opacity-control {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-top: 0.5rem;
+        }
+        
+        .opacity-slider {
+            flex: 1;
+            height: 8px;
+            border-radius: 5px;
+            background: #ddd;
+            outline: none;
+            -webkit-appearance: none;
+        }
+        
+        .opacity-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #667eea;
+            cursor: pointer;
+        }
+        
+        .opacity-slider::-moz-range-thumb {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #667eea;
+            cursor: pointer;
+            border: none;
+        }
+        
+        #opacityValue {
+            min-width: 40px;
+            font-weight: 600;
+            color: #667eea;
+        }
+    </style>
+</head>
+<body>
+    <!-- Login Screen -->
+    <div id="loginScreen" class="login-screen">
+        <div class="login-container">
+            <div class="login-form">
+                <h2><i class="fas fa-user-shield"></i> Admin Login</h2>
+                <form id="loginForm">
+                    <div class="form-group">
+                        <label for="username">Username</label>
+                        <input type="text" id="username" placeholder="Enter username" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="password">Password</label>
+                        <input type="password" id="password" placeholder="Enter password" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-sign-in-alt"></i> Login
+                    </button>
+                </form>
+                <p class="demo-info">Demo credentials: admin / admin123</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Admin Dashboard -->
+    <div id="adminDashboard" class="admin-dashboard" style="display: none;">
+        <!-- Header -->
+        <header class="admin-header">
+            <div class="header-content">
+                <h1><i class="fas fa-cogs"></i> Portfolio Admin Panel</h1>
+                <div class="header-actions">
+                    <a href="index.html" target="_blank" class="btn btn-secondary">
+                        <i class="fas fa-external-link-alt"></i> View Portfolio
+                    </a>
+                    <button id="logoutBtn" class="btn btn-danger">
+                        <i class="fas fa-sign-out-alt"></i> Logout
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Navigation -->
+        <nav class="admin-nav">
+            <ul class="nav-tabs">
+                <li><a href="#dashboard" class="tab-link active" data-tab="dashboard">
+                    <i class="fas fa-tachometer-alt"></i> Dashboard
+                </a></li>
+                <li><a href="#about" class="tab-link" data-tab="about">
+                    <i class="fas fa-user"></i> About Section
+                </a></li>
+                <li><a href="#portfolio" class="tab-link" data-tab="portfolio">
+                    <i class="fas fa-briefcase"></i> Portfolio
+                </a></li>
+                <li><a href="#services" class="tab-link" data-tab="services">
+                    <i class="fas fa-concierge-bell"></i> Services
+                </a></li>
+                <li><a href="#contact" class="tab-link" data-tab="contact">
+                    <i class="fas fa-envelope"></i> Contact Info
+                </a></li>
+                <li><a href="#settings" class="tab-link" data-tab="settings">
+                    <i class="fas fa-cog"></i> Settings
+                </a></li>
+            </ul>
+        </nav>
+
+        <!-- Main Content -->
+        <main class="admin-main">
+            <!-- Dashboard Tab -->
+            <div id="dashboard" class="tab-content active">
+                <div class="dashboard-grid">
+                    <div class="dashboard-card">
+                        <h3><i class="fas fa-chart-bar"></i> Quick Stats</h3>
+                        <div class="stats-grid">
+                            <div class="stat-item">
+                                <span class="stat-number" id="totalProjects">6</span>
+                                <span class="stat-label">Portfolio Items</span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-number" id="totalServices">4</span>
+                                <span class="stat-label">Services</span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-number" id="lastUpdated">Today</span>
+                                <span class="stat-label">Last Updated</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="dashboard-card">
+                        <h3><i class="fas fa-tasks"></i> Recent Activity</h3>
+                        <div class="activity-list">
+                            <div class="activity-item">
+                                <i class="fas fa-plus-circle text-success"></i>
+                                <span>Added new portfolio item: "Brand Identity Project"</span>
+                                <small>2 hours ago</small>
+                            </div>
+                            <div class="activity-item">
+                                <i class="fas fa-edit text-primary"></i>
+                                <span>Updated about section</span>
+                                <small>1 day ago</small>
+                            </div>
+                            <div class="activity-item">
+                                <i class="fas fa-cog text-warning"></i>
+                                <span>Modified color scheme</span>
+                                <small>3 days ago</small>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="dashboard-card">
+                        <h3><i class="fas fa-link"></i> Quick Actions</h3>
+                        <div class="quick-actions">
+                            <button class="action-btn" data-action="add-project">
+                                <i class="fas fa-plus"></i> Add Portfolio Item
+                            </button>
+                            <button class="action-btn" data-action="edit-about">
+                                <i class="fas fa-edit"></i> Edit About
+                            </button>
+                            <button class="action-btn" data-action="manage-services">
+                                <i class="fas fa-cog"></i> Manage Services
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- About Section Tab -->
+            <div id="about" class="tab-content">
+                <div class="content-header">
+                    <h2><i class="fas fa-user"></i> About Section Management</h2>
+                    <p>Update your personal information, skills, and statistics.</p>
+                </div>
+                
+                <form id="aboutForm" class="admin-form">
+                    <div class="form-section">
+                        <h3>Personal Information</h3>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="designerName">Designer Name</label>
+                                <input type="text" id="designerName" value="Alex Chen">
+                            </div>
+                            <div class="form-group">
+                                <label for="profession">Profession</label>
+                                <input type="text" id="profession" value="Creative Graphic Designer">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="bio">Bio/Description</label>
+                            <textarea id="bio" rows="4">Hello! I'm Alex Chen, a passionate graphic designer with over 5 years of experience creating compelling visual identities, branding solutions, and digital experiences. I believe in the power of design to communicate, inspire, and transform.</textarea>
+                        </div>
+                    </div>
+                    
+                    <div class="form-section">
+                        <h3>Skills</h3>
+                        <div class="skills-input">
+                            <input type="text" id="newSkill" placeholder="Add a new skill">
+                            <button type="button" id="addSkillBtn" class="btn btn-secondary">Add Skill</button>
+                        </div>
+                        <div id="skillsList" class="skills-list">
+                            <span class="skill-tag">Brand Identity <i class="fas fa-times"></i></span>
+                            <span class="skill-tag">Logo Design <i class="fas fa-times"></i></span>
+                            <span class="skill-tag">Print Design <i class="fas fa-times"></i></span>
+                            <span class="skill-tag">Digital Design <i class="fas fa-times"></i></span>
+                            <span class="skill-tag">Adobe Creative Suite <i class="fas fa-times"></i></span>
+                            <span class="skill-tag">Figma <i class="fas fa-times"></i></span>
+                            <span class="skill-tag">UI/UX Design <i class="fas fa-times"></i></span>
+                            <span class="skill-tag">Typography <i class="fas fa-times"></i></span>
+                        </div>
+                    </div>
+                    
+                    <div class="form-section">
+                        <h3>Statistics</h3>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="projectsCount">Projects Completed</label>
+                                <input type="number" id="projectsCount" value="150">
+                            </div>
+                            <div class="form-group">
+                                <label for="clientsCount">Happy Clients</label>
+                                <input type="number" id="clientsCount" value="50">
+                            </div>
+                            <div class="form-group">
+                                <label for="experienceYears">Years Experience</label>
+                                <input type="number" id="experienceYears" value="5">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save"></i> Save Changes
+                        </button>
+                        <button type="button" class="btn btn-secondary">
+                            <i class="fas fa-eye"></i> Preview Changes
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Portfolio Tab -->
+            <div id="portfolio" class="tab-content">
+                <div class="content-header">
+                    <h2><i class="fas fa-briefcase"></i> Portfolio Management</h2>
+                    <button class="btn btn-primary" id="addProjectBtn">
+                        <i class="fas fa-plus"></i> Add New Project
+                    </button>
+                </div>
+                
+                <div class="portfolio-grid" id="portfolioGrid">
+                    <!-- Portfolio items will be loaded dynamically -->
+                </div>
+            </div>
+
+            <!-- Services Tab -->
+            <div id="services" class="tab-content">
+                <div class="content-header">
+                    <h2><i class="fas fa-concierge-bell"></i> Services Management</h2>
+                    <button class="btn btn-primary" id="addServiceBtn">
+                        <i class="fas fa-plus"></i> Add New Service
+                    </button>
+                </div>
+                
+                <div class="services-list" id="servicesList">
+                    <!-- Services will be loaded dynamically -->
+                </div>
+            </div>
+
+            <!-- Contact Tab -->
+            <div id="contact" class="tab-content">
+                <div class="content-header">
+                    <h2><i class="fas fa-envelope"></i> Contact Information</h2>
+                    <p>Update your contact details and social media links.</p>
+                </div>
+                
+                <form id="contactForm" class="admin-form">
+                    <div class="form-section">
+                        <h3>Contact Details</h3>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="email">Email Address</label>
+                                <input type="email" id="email" value="alex.chen@email.com">
+                            </div>
+                            <div class="form-group">
+                                <label for="phone">Phone Number</label>
+                                <input type="tel" id="phone" value="+1 (555) 123-4567">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="location">Location</label>
+                            <input type="text" id="location" value="New York, NY">
+                        </div>
+                    </div>
+                    
+                    <div class="form-section">
+                        <h3>Social Media Links</h3>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="behance">Behance Profile</label>
+                                <input type="url" id="behance" placeholder="https://behance.net/username">
+                            </div>
+                            <div class="form-group">
+                                <label for="dribbble">Dribbble Profile</label>
+                                <input type="url" id="dribbble" placeholder="https://dribbble.com/username">
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="instagram">Instagram Profile</label>
+                                <input type="url" id="instagram" placeholder="https://instagram.com/username">
+                            </div>
+                            <div class="form-group">
+                                <label for="linkedin">LinkedIn Profile</label>
+                                <input type="url" id="linkedin" placeholder="https://linkedin.com/in/username">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save"></i> Save Changes
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Settings Tab -->
+            <div id="settings" class="tab-content">
+                <div class="content-header">
+                    <h2><i class="fas fa-cog"></i> Settings</h2>
+                    <p>Configure portfolio settings and preferences.</p>
+                </div>
+                
+                <form id="settingsForm" class="admin-form">
+                    <div class="form-section">
+                        <h3>Color Scheme</h3>
+                        <div class="color-picker-group">
+                            <div class="form-group">
+                                <label for="primaryColor">Primary Color</label>
+                                <input type="color" id="primaryColor" value="#667eea">
+                            </div>
+                            <div class="form-group">
+                                <label for="secondaryColor">Secondary Color</label>
+                                <input type="color" id="secondaryColor" value="#764ba2">
+                            </div>
+                        </div>
+                        <button type="button" class="btn btn-secondary" id="applyColors">
+                            <i class="fas fa-palette"></i> Apply Colors
+                        </button>
+                    </div>
+                    
+                    <div class="form-section">
+                        <h3>Portfolio Settings</h3>
+                        <div class="form-group">
+                            <label for="portfolioTitle">Portfolio Title</label>
+                            <input type="text" id="portfolioTitle" value="Alex Chen - Graphic Designer Portfolio">
+                        </div>
+                        <div class="form-group">
+                            <label for="portfolioDescription">Portfolio Description</label>
+                            <textarea id="portfolioDescription" rows="3">A modern, responsive portfolio showcasing creative graphic design work and branding solutions.</textarea>
+                        </div>
+                    </div>
+                    
+                    <div class="form-section">
+                        <h3>Hero Photo</h3>
+                        <div class="form-group">
+                            <label for="heroImage">Hero Photo</label>
+                            <input type="file" id="heroImage" accept="image/*">
+                            <small>Recommended size: 800x600px. This will replace the placeholder image in the hero section.</small>
+                        </div>
+                        <div id="heroImagePreview" class="image-preview">
+                            <div class="placeholder-image">
+                                <i class="fas fa-image"></i>
+                                <span>No hero image uploaded</span>
+                            </div>
+                        </div>
+                        <button type="button" class="btn btn-secondary" id="removeHeroImageBtn" style="display: none;">
+                            <i class="fas fa-trash"></i> Remove Hero Image
+                        </button>
+                    </div>
+                    
+                    <div class="form-section">
+                        <h3>Home Background</h3>
+                        <div class="form-group">
+                            <label for="homeBackground">Home Background Image</label>
+                            <input type="file" id="homeBackground" accept="image/*">
+                            <small>Recommended size: 1920x1080px. This will replace the gradient background of the hero section.</small>
+                        </div>
+                        <div id="homeBackgroundPreview" class="image-preview">
+                            <div class="placeholder-image">
+                                <i class="fas fa-image"></i>
+                                <span>No background image uploaded</span>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="backgroundOpacity">Background Opacity</label>
+                            <div class="opacity-control">
+                                <input type="range" id="backgroundOpacity" min="0" max="100" value="50" class="opacity-slider">
+                                <span id="opacityValue">50%</span>
+                            </div>
+                            <small>Adjust the opacity of the background image (0% = transparent, 100% = opaque)</small>
+                        </div>
+                        <button type="button" class="btn btn-secondary" id="removeHomeBackgroundBtn" style="display: none;">
+                            <i class="fas fa-trash"></i> Remove Background Image
+                        </button>
+                    </div>
+                    
+                    <div class="form-section">
+                        <h3>Security</h3>
+                        <button type="button" class="btn btn-warning" id="changePasswordBtn">
+                            <i class="fas fa-key"></i> Change Password
+                        </button>
+                    </div>
+                    
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save"></i> Save Settings
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </main>
+    </div>
+
+    <!-- Modals -->
+    <div id="projectModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="projectModalTitle">Add New Project</h3>
+                <span class="close">&times;</span>
+            </div>
+            <form id="projectForm" class="admin-form">
+                <div class="form-group">
+                    <label for="projectTitle">Project Title</label>
+                    <input type="text" id="projectTitle" required>
+                </div>
+                <div class="form-group">
+                    <label for="projectDescription">Description</label>
+                    <textarea id="projectDescription" rows="3" required></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="projectCategory">Category</label>
+                    <select id="projectCategory" required>
+                        <option value="branding">Branding</option>
+                        <option value="logo">Logo Design</option>
+                        <option value="print">Print Design</option>
+                        <option value="digital">Digital Design</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="projectImage">Project Image</label>
+                    <input type="file" id="projectImage" accept="image/*">
+                    <small>Recommended size: 800x600px</small>
+                </div>
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary">Save Project</button>
+                    <button type="button" class="btn btn-secondary modal-close">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="serviceModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="serviceModalTitle">Add New Service</h3>
+                <span class="close">&times;</span>
+            </div>
+            <form id="serviceForm" class="admin-form">
+                <div class="form-group">
+                    <label for="serviceTitle">Service Title</label>
+                    <input type="text" id="serviceTitle" required>
+                </div>
+                <div class="form-group">
+                    <label for="serviceDescription">Description</label>
+                    <textarea id="serviceDescription" rows="3" required></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="serviceIcon">Icon Class</label>
+                    <input type="text" id="serviceIcon" placeholder="e.g., fas fa-palette" required>
+                    <small>Use Font Awesome icon classes</small>
+                </div>
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary">Save Service</button>
+                    <button type="button" class="btn btn-secondary modal-close">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="admin-script.js"></script>
+</body>
+</html>
