@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simple Image Upload Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .upload-section {
+            margin: 20px 0;
+            padding: 20px;
+            border: 2px dashed #ccc;
+            border-radius: 8px;
+            text-align: center;
+        }
+        .upload-section.dragover {
+            border-color: #667eea;
+            background: #f0f4ff;
+        }
+        .upload-section.success {
+            border-color: #28a745;
+            background: #f0fff4;
+        }
+        .upload-section.error {
+            border-color: #dc3545;
+            background: #fff5f5;
+        }
+        button {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 10px;
+            font-size: 16px;
+        }
+        button:hover {
+            background: #5a6fd8;
+        }
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        .status {
+            margin: 20px 0;
+            padding: 15px;
+            border-radius: 5px;
+            font-weight: bold;
+        }
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .status.info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+        .image-preview {
+            margin: 20px 0;
+            text-align: center;
+        }
+        .image-preview img {
+            max-width: 300px;
+            max-height: 200px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        .log {
+            background: #2d3748;
+            color: #e2e8f0;
+            padding: 15px;
+            border-radius: 5px;
+            font-family: monospace;
+            font-size: 12px;
+            max-height: 200px;
+            overflow-y: auto;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 Simple Image Upload Test</h1>
+        <p>This page tests the image upload functionality directly without the admin panel interface.</p>
+        
+        <div class="status info" id="status">
+            Ready to test image uploads
+        </div>
+        
+        <!-- Hero Image Upload -->
+        <div class="upload-section" id="heroSection">
+            <h3>📸 Hero Image Upload</h3>
+            <p>Upload an image for the hero section (max 5MB)</p>
+            <input type="file" id="heroFile" accept="image/*" style="margin: 10px 0;">
+            <br>
+            <button onclick="uploadHeroImage()" id="heroBtn">Upload Hero Image</button>
+            <div class="image-preview" id="heroPreview"></div>
+        </div>
+        
+        <!-- Background Image Upload -->
+        <div class="upload-section" id="backgroundSection">
+            <h3>🏠 Background Image Upload</h3>
+            <p>Upload an image for the home background (max 10MB)</p>
+            <input type="file" id="backgroundFile" accept="image/*" style="margin: 10px 0;">
+            <br>
+            <button onclick="uploadBackgroundImage()" id="backgroundBtn">Upload Background Image</button>
+            <div class="image-preview" id="backgroundPreview"></div>
+        </div>
+        
+        <!-- Quick Actions -->
+        <div style="text-align: center; margin: 30px 0;">
+            <button onclick="testBothUploads()">🧪 Test Both Uploads</button>
+            <button onclick="clearLogs()">🗑️ Clear Logs</button>
+            <button onclick="checkImages()">🔍 Check Current Images</button>
+        </div>
+        
+        <!-- Logs -->
+        <div class="log" id="log"></div>
+        
+        <!-- Link back to main site -->
+        <div style="text-align: center; margin-top: 30px;">
+            <a href="/" target="_blank">🌐 View Portfolio</a> | 
+            <a href="/admin.html" target="_blank">⚙️ Admin Panel</a> | 
+            <a href="/test-image-refresh.html" target="_blank">📊 Test Page</a>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE_URL = window.location.origin;
+        let logCount = 0;
+
+        function addLog(message, type = 'info') {
+            const log = document.getElementById('log');
+            const timestamp = new Date().toLocaleTimeString();
+            const logEntry = document.createElement('div');
+            logEntry.innerHTML = `<span style="color: #a0aec0;">[${timestamp}]</span> ${message}`;
+            log.appendChild(logEntry);
+            log.scrollTop = log.scrollHeight;
+            logCount++;
+            
+            if (logCount > 50) {
+                log.removeChild(log.firstChild);
+                logCount--;
+            }
+        }
+
+        function clearLogs() {
+            document.getElementById('log').innerHTML = '';
+            logCount = 0;
+            addLog('Logs cleared', 'info');
+        }
+
+        function updateStatus(message, type) {
+            const status = document.getElementById('status');
+            status.className = `status ${type}`;
+            status.textContent = message;
+        }
+
+        function updateSection(sectionId, success) {
+            const section = document.getElementById(sectionId);
+            section.className = `upload-section ${success ? 'success' : 'error'}`;
+            setTimeout(() => {
+                section.className = 'upload-section';
+            }, 3000);
+        }
+
+        function fileToBase64(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = () => resolve(reader.result);
+                reader.onerror = reject;
+                reader.readAsDataURL(file);
+            });
+        }
+
+        async function uploadImage(type, file, sectionId) {
+            if (!file) {
+                addLog(`No file selected for ${type}`, 'error');
+                updateStatus(`Please select a file for ${type}`, 'error');
+                return false;
+            }
+
+            const btn = document.getElementById(type === 'hero' ? 'heroBtn' : 'backgroundBtn');
+            btn.disabled = true;
+            btn.textContent = 'Uploading...';
+
+            try {
+                addLog(`Starting ${type} image upload: ${file.name} (${file.type}, ${file.size} bytes)`, 'info');
+                
+                const imageData = await fileToBase64(file);
+                addLog(`File converted to base64, length: ${imageData.length}`, 'info');
+
+                const response = await fetch(`${API_BASE_URL}/api/upload/${type}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        imageData: imageData,
+                        mimeType: file.type
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const result = await response.json();
+                addLog(`${type} upload successful: ${result.message}`, 'info');
+
+                // Update preview
+                const preview = document.getElementById(`${type}Preview`);
+                preview.innerHTML = `<img src="${imageData}" alt="${type} image" onload="addLog('${type} preview loaded successfully', 'info')">`;
+
+                updateSection(sectionId, true);
+                updateStatus(`${type} image uploaded successfully!`, 'success');
+                return true;
+
+            } catch (error) {
+                addLog(`${type} upload failed: ${error.message}`, 'error');
+                updateStatus(`${type} upload failed: ${error.message}`, 'error');
+                updateSection(sectionId, false);
+                return false;
+            } finally {
+                btn.disabled = false;
+                btn.textContent = `Upload ${type.charAt(0).toUpperCase() + type.slice(1)} Image`;
+            }
+        }
+
+        async function uploadHeroImage() {
+            const file = document.getElementById('heroFile').files[0];
+            await uploadImage('hero', file, 'heroSection');
+        }
+
+        async function uploadBackgroundImage() {
+            const file = document.getElementById('backgroundFile').files[0];
+            await uploadImage('background', file, 'backgroundSection');
+        }
+
+        async function testBothUploads() {
+            addLog('Starting test of both uploads...', 'info');
+            updateStatus('Testing both uploads...', 'info');
+
+            // Create simple test images
+            const heroData = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==';
+            const bgData = 'data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAABAAEDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAUEAEAAAAAAAAAAAAAAAAAAAAA/8QAFQEBAQAAAAAAAAAAAAAAAAAAAAX/xAAUEQEAAAAAAAAAAAAAAAAAAAAA/9oADAMBAAIRAxEAPwCdABmX/9k=';
+
+            try {
+                const heroResponse = await fetch(`${API_BASE_URL}/api/upload/hero`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ imageData: heroData, mimeType: 'image/png' })
+                });
+
+                const bgResponse = await fetch(`${API_BASE_URL}/api/upload/background`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ imageData: bgData, mimeType: 'image/jpeg' })
+                });
+
+                if (heroResponse.ok && bgResponse.ok) {
+                    addLog('✅ Both test uploads successful!', 'info');
+                    updateStatus('✅ Both test uploads successful!', 'success');
+                } else {
+                    throw new Error('One or both uploads failed');
+                }
+            } catch (error) {
+                addLog(`❌ Test uploads failed: ${error.message}`, 'error');
+                updateStatus('❌ Test uploads failed', 'error');
+            }
+        }
+
+        async function checkImages() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/images`);
+                const images = await response.json();
+                
+                addLog('Current images:', 'info');
+                addLog(`- Hero image: ${images.heroImage ? '✅ Present' : '❌ Missing'}`, 'info');
+                addLog(`- Background image: ${images.homeBackgroundImage ? '✅ Present' : '❌ Missing'}`, 'info');
+                
+                updateStatus('Image status checked - see logs for details', 'info');
+            } catch (error) {
+                addLog(`Failed to check images: ${error.message}`, 'error');
+                updateStatus('Failed to check images', 'error');
+            }
+        }
+
+        // Initialize page
+        window.addEventListener('load', () => {
+            addLog('Simple upload test page loaded', 'info');
+            updateStatus('Ready to test image uploads', 'info');
+        });
+    </script>
+</body>
+</html>
