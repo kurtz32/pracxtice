@@ -128,7 +128,7 @@ const apiService = {
         });
     },
 
-    // Image upload methods
+    // Image upload methods using unified API
     async uploadHeroImage(file) {
         try {
             const imageData = await this.fileToBase64(file);
@@ -182,11 +182,33 @@ const apiService = {
     },
 
     async deleteHeroImage() {
-        return await this.request('/images/hero', { method: 'DELETE' });
+        const response = await fetch(`${API_BASE_URL}/api/upload/hero`, {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        return await response.json();
     },
 
     async deleteBackgroundImage() {
-        return await this.request('/images/background', { method: 'DELETE' });
+        const response = await fetch(`${API_BASE_URL}/api/upload/background`, {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        return await response.json();
     }
 };
 
