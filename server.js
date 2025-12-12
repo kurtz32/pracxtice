@@ -202,7 +202,7 @@ app.post('/api/images', (req, res) => {
 // Upload hero image
 app.post('/api/upload/hero', (req, res) => {
     console.log('Upload hero request body:', JSON.stringify(req.body, null, 2));
-    const { imageData } = req.body;
+    const { imageData, mimeType } = req.body;
     if (!imageData) {
         return res.status(400).json({ error: 'No image data provided' });
     }
@@ -237,7 +237,7 @@ app.delete('/api/upload/hero', (req, res) => {
 
 // Upload background image
 app.post('/api/upload/background', (req, res) => {
-    const { imageData } = req.body;
+    const { imageData, mimeType } = req.body;
     if (!imageData) {
         return res.status(400).json({ error: 'No image data provided' });
     }

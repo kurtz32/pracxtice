@@ -18,20 +18,17 @@ export default async function handler(req, res) {
         const uploadType = pathSegments[pathSegments.length - 1]; // 'hero' or 'background'
 
         if (req.method === 'POST') {
-            // Handle file upload
-            const formData = await parseFormData(req);
-            const imageFile = formData.get('image');
+            // Handle JSON upload with base64 image data
+            const body = await readBody(req);
+            const { imageData, mimeType } = body;
             
-            if (!imageFile) {
-                res.status(400).json({ error: 'No image file provided' });
+            if (!imageData) {
+                res.status(400).json({ error: 'No image data provided' });
                 return;
             }
 
-            // Convert file to base64 data URL
-            const imageBuffer = await imageFile.arrayBuffer();
-            const base64 = Buffer.from(imageBuffer).toString('base64');
-            const mimeType = imageFile.type || 'image/jpeg';
-            const dataUrl = `data:${mimeType};base64,${base64}`;
+            // Use the provided base64 data URL directly
+            const dataUrl = imageData;
 
             // Get current images data
             const currentData = await storage.readData();
@@ -62,6 +59,7 @@ export default async function handler(req, res) {
             }
         } else if (req.method === 'DELETE') {
             // Handle image deletion
+            const body = await readBody(req); // Still read body for consistency
             const currentData = await storage.readData();
             const imagesData = currentData.images || {};
 
