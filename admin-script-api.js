@@ -883,28 +883,45 @@ async function handleHeroImageUpload(e) {
             // Force refresh the main page images after a short delay
             setTimeout(async () => {
                 try {
-                    // Trigger refresh of main page if it's open as popup
+                    // Multiple refresh strategies to ensure it works
+                    
+                    // Strategy 1: Direct function call if popup
                     if (window.opener && !window.opener.closed) {
-                        // Call the main page's refresh function directly
                         if (window.opener.forceRefreshNow) {
+                            console.log('Calling forceRefreshNow on main page for hero image');
                             window.opener.forceRefreshNow();
                         } else if (window.opener.refreshPageData) {
+                            console.log('Calling refreshPageData on main page for hero image');
                             window.opener.refreshPageData();
                         } else {
+                            console.log('Reloading main page for hero image');
                             window.opener.location.reload();
                         }
-                    } else {
-                        // If not a popup, try to refresh via localStorage event
-                        localStorage.setItem('portfolio_refresh', Date.now().toString());
-                        // Also try to refresh the current page if it's the main page
-                        if (window.location.pathname === '/' || window.location.pathname === '/index.html') {
-                            window.location.reload();
-                        }
                     }
+                    
+                    // Strategy 2: localStorage event (works across tabs)
+                    localStorage.setItem('portfolio_refresh', Date.now().toString());
+                    console.log('Triggered portfolio refresh via localStorage for hero image');
+                    
+                    // Strategy 3: BroadcastChannel for modern browsers
+                    if (typeof BroadcastChannel !== 'undefined') {
+                        const channel = new BroadcastChannel('portfolio-updates');
+                        channel.postMessage({ type: 'hero-image-updated', timestamp: Date.now() });
+                        channel.close();
+                    }
+                    
+                    // Strategy 4: Manual page reload if this is the main page
+                    if (window.location.pathname === '/' || window.location.pathname === '/index.html') {
+                        console.log('Reloading current page as it appears to be the main page');
+                        window.location.reload();
+                    }
+                    
                 } catch (refreshError) {
-                    console.log('Could not refresh main page:', refreshError);
+                    console.log('Refresh error:', refreshError);
+                    // Fallback: just reload the page
+                    setTimeout(() => window.location.reload(), 2000);
                 }
-            }, 1000);
+            }, 1500);
         }
     } catch (error) {
         showMessage('Failed to upload hero image', 'error');
@@ -995,28 +1012,45 @@ async function handleHomeBackgroundUpload(e) {
             // Force refresh the main page images after a short delay
             setTimeout(async () => {
                 try {
-                    // Trigger refresh of main page if it's open as popup
+                    // Multiple refresh strategies to ensure it works
+                    
+                    // Strategy 1: Direct function call if popup
                     if (window.opener && !window.opener.closed) {
-                        // Call the main page's refresh function directly
                         if (window.opener.forceRefreshNow) {
+                            console.log('Calling forceRefreshNow on main page for background image');
                             window.opener.forceRefreshNow();
                         } else if (window.opener.refreshPageData) {
+                            console.log('Calling refreshPageData on main page for background image');
                             window.opener.refreshPageData();
                         } else {
+                            console.log('Reloading main page for background image');
                             window.opener.location.reload();
                         }
-                    } else {
-                        // If not a popup, try to refresh via localStorage event
-                        localStorage.setItem('portfolio_refresh', Date.now().toString());
-                        // Also try to refresh the current page if it's the main page
-                        if (window.location.pathname === '/' || window.location.pathname === '/index.html') {
-                            window.location.reload();
-                        }
                     }
+                    
+                    // Strategy 2: localStorage event (works across tabs)
+                    localStorage.setItem('portfolio_refresh', Date.now().toString());
+                    console.log('Triggered portfolio refresh via localStorage for background image');
+                    
+                    // Strategy 3: BroadcastChannel for modern browsers
+                    if (typeof BroadcastChannel !== 'undefined') {
+                        const channel = new BroadcastChannel('portfolio-updates');
+                        channel.postMessage({ type: 'background-image-updated', timestamp: Date.now() });
+                        channel.close();
+                    }
+                    
+                    // Strategy 4: Manual page reload if this is the main page
+                    if (window.location.pathname === '/' || window.location.pathname === '/index.html') {
+                        console.log('Reloading current page as it appears to be the main page');
+                        window.location.reload();
+                    }
+                    
                 } catch (refreshError) {
-                    console.log('Could not refresh main page:', refreshError);
+                    console.log('Refresh error:', refreshError);
+                    // Fallback: just reload the page
+                    setTimeout(() => window.location.reload(), 2000);
                 }
-            }, 1000);
+            }, 1500);
         }
     } catch (error) {
         showMessage('Failed to upload background image', 'error');

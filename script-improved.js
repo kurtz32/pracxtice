@@ -719,10 +719,25 @@ window.refreshPageData = refreshPageData;
 // Listen for storage events from admin panel
 window.addEventListener('storage', (e) => {
     if (e.key === 'portfolio_refresh') {
-        console.log('Refresh triggered by admin panel');
+        console.log('Refresh triggered by admin panel via localStorage');
         refreshPageData();
     }
 });
+
+// Listen for BroadcastChannel messages from admin panel
+if (typeof BroadcastChannel !== 'undefined') {
+    const channel = new BroadcastChannel('portfolio-updates');
+    channel.addEventListener('message', (event) => {
+        console.log('Received broadcast message:', event.data);
+        if (event.data.type && event.data.type.includes('image-updated')) {
+            console.log('Image update detected via BroadcastChannel, refreshing...');
+            refreshPageData();
+        }
+    });
+    console.log('BroadcastChannel listener set up for portfolio updates');
+} else {
+    console.log('BroadcastChannel not supported in this browser');
+}
 
 // Force immediate refresh function for admin panel calls
 window.forceRefreshNow = async function() {

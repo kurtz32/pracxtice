@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image Refresh Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 20px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+        }
+        .image-display {
+            margin: 20px 0;
+            padding: 20px;
+            background: #f9f9f9;
+            border-radius: 8px;
+            text-align: center;
+        }
+        .image-display img {
+            max-width: 100%;
+            max-height: 300px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        .controls {
+            margin: 20px 0;
+        }
+        button {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #5a6fd8;
+        }
+        .log {
+            background: #2d3748;
+            color: #e2e8f0;
+            padding: 15px;
+            border-radius: 5px;
+            font-family: monospace;
+            font-size: 12px;
+            max-height: 200px;
+            overflow-y: auto;
+            margin: 20px 0;
+        }
+        .status {
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 Image Refresh Test Page</h1>
+        <p>This page tests the image refresh functionality between the admin panel and main portfolio page.</p>
+        
+        <div class="test-section">
+            <h2>📊 Current Image Status</h2>
+            <div id="status" class="status">Loading...</div>
+            
+            <div class="image-display">
+                <h3>Hero Image</h3>
+                <div id="heroImageDisplay">
+                    <p>Loading hero image...</p>
+                </div>
+            </div>
+            
+            <div class="image-display">
+                <h3>Background Image</h3>
+                <div id="backgroundImageDisplay">
+                    <p>Background image affects the hero section background</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="test-section">
+            <h2>🎮 Test Controls</h2>
+            <div class="controls">
+                <button onclick="loadImages()">🔄 Refresh Images</button>
+                <button onclick="testAdminPanel()">🔗 Open Admin Panel</button>
+                <button onclick="testStorageEvent()">📡 Test Storage Event</button>
+                <button onclick="clearLog()">🗑️ Clear Log</button>
+            </div>
+        </div>
+        
+        <div class="test-section">
+            <h2>📋 Event Log</h2>
+            <div id="log" class="log"></div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE_URL = window.location.origin;
+        let imagesData = {};
+        let logCount = 0;
+
+        function addLog(message, type = 'info') {
+            const log = document.getElementById('log');
+            const timestamp = new Date().toLocaleTimeString();
+            const logEntry = document.createElement('div');
+            logEntry.innerHTML = `<span style="color: #a0aec0;">[${timestamp}]</span> ${message}`;
+            log.appendChild(logEntry);
+            log.scrollTop = log.scrollHeight;
+            logCount++;
+            
+            // Keep only last 50 entries
+            if (logCount > 50) {
+                log.removeChild(log.firstChild);
+                logCount--;
+            }
+        }
+
+        function clearLog() {
+            document.getElementById('log').innerHTML = '';
+            logCount = 0;
+            addLog('Log cleared', 'info');
+        }
+
+        async function loadImages() {
+            addLog('Loading images from API...', 'info');
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/images`);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                imagesData = await response.json();
+                addLog('Images loaded successfully', 'success');
+                updateImageDisplays();
+            } catch (error) {
+                addLog(`Failed to load images: ${error.message}`, 'error');
+                updateStatus('Failed to load images', 'error');
+            }
+        }
+
+        function updateImageDisplays() {
+            // Update status
+            const status = document.getElementById('status');
+            const heroImage = imagesData.heroImage;
+            const backgroundImage = imagesData.homeBackgroundImage;
+            
+            if (heroImage && backgroundImage) {
+                status.className = 'status success';
+                status.innerHTML = '✅ Both images are loaded and should display on the portfolio page';
+            } else if (heroImage || backgroundImage) {
+                status.className = 'status success';
+                status.innerHTML = '⚠️ One image is loaded. Upload both for complete testing.';
+            } else {
+                status.className = 'status error';
+                status.innerHTML = '❌ No images uploaded yet. Use admin panel to upload images.';
+            }
+
+            // Update hero image display
+            const heroDisplay = document.getElementById('heroImageDisplay');
+            if (heroImage) {
+                heroDisplay.innerHTML = `<img src="${heroImage}" alt="Hero Image" onload="addLog('Hero image loaded successfully', 'success')" onerror="addLog('Hero image failed to load', 'error')">`;
+            } else {
+                heroDisplay.innerHTML = '<p>No hero image uploaded</p>';
+            }
+
+            // Update background image display
+            const backgroundDisplay = document.getElementById('backgroundImageDisplay');
+            if (backgroundImage) {
+                backgroundDisplay.innerHTML = `
+                    <p>Background image uploaded ✓</p>
+                    <div style="background-image: url('${backgroundImage}'); background-size: cover; background-position: center; height: 150px; border-radius: 8px;"></div>
+                `;
+            } else {
+                backgroundDisplay.innerHTML = '<p>No background image uploaded</p>';
+            }
+        }
+
+        function updateStatus(message, type) {
+            const status = document.getElementById('status');
+            status.className = `status ${type}`;
+            status.innerHTML = message;
+        }
+
+        function testAdminPanel() {
+            window.open('/admin.html', '_blank');
+            addLog('Admin panel opened in new window', 'info');
+        }
+
+        function testStorageEvent() {
+            // Trigger a storage event manually
+            localStorage.setItem('portfolio_refresh_test', Date.now().toString());
+            addLog('Storage event triggered manually', 'info');
+        }
+
+        // Listen for storage events
+        window.addEventListener('storage', (e) => {
+            if (e.key === 'portfolio_refresh' || e.key === 'portfolio_refresh_test') {
+                addLog('Storage event detected! Refreshing images...', 'success');
+                loadImages();
+            }
+        });
+
+        // Listen for BroadcastChannel messages
+        if (typeof BroadcastChannel !== 'undefined') {
+            const channel = new BroadcastChannel('portfolio-updates');
+            channel.addEventListener('message', (event) => {
+                addLog(`BroadcastChannel message received: ${JSON.stringify(event.data)}`, 'success');
+                loadImages();
+            });
+            addLog('BroadcastChannel listener set up', 'info');
+        } else {
+            addLog('BroadcastChannel not supported', 'error');
+        }
+
+        // Load images on page load
+        window.addEventListener('load', () => {
+            addLog('Test page loaded', 'info');
+            loadImages();
+        });
+    </script>
+</body>
+</html>
