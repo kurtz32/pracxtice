@@ -120,18 +120,32 @@ const apiService = {
 
     // Helper method to convert file to base64
     async fileToBase64(file) {
+        console.log('FileReader starting for file:', file.name);
         return new Promise((resolve, reject) => {
             const reader = new FileReader();
-            reader.onload = () => resolve(reader.result);
-            reader.onerror = reject;
+            reader.onload = () => {
+                console.log('FileReader onload triggered, result length:', reader.result ? reader.result.length : 'null');
+                resolve(reader.result);
+            };
+            reader.onerror = (error) => {
+                console.error('FileReader error:', error);
+                reject(error);
+            };
+            reader.onabort = () => {
+                console.log('FileReader aborted');
+            };
+            console.log('FileReader reading file as data URL...');
             reader.readAsDataURL(file);
         });
     },
 
     // Image upload methods using unified API
     async uploadHeroImage(file) {
+        console.log('Starting hero image upload for file:', file.name, file.type, file.size);
         try {
+            console.log('Converting file to base64...');
             const imageData = await this.fileToBase64(file);
+            console.log('File converted to base64, length:', imageData.length);
             
             const response = await fetch(`${API_BASE_URL}/api/upload/hero`, {
                 method: 'POST',
@@ -156,8 +170,11 @@ const apiService = {
     },
 
     async uploadBackgroundImage(file) {
+        console.log('Starting background image upload for file:', file.name, file.type, file.size);
         try {
+            console.log('Converting file to base64...');
             const imageData = await this.fileToBase64(file);
+            console.log('File converted to base64, length:', imageData.length);
             
             const response = await fetch(`${API_BASE_URL}/api/upload/background`, {
                 method: 'POST',
@@ -302,12 +319,38 @@ function setupEventListeners() {
     document.getElementById('applyColors').addEventListener('click', applyColorScheme);
     
     // Hero image upload
-    document.getElementById('heroImage').addEventListener('change', handleHeroImageUpload);
-    document.getElementById('removeHeroImageBtn').addEventListener('click', removeHeroImage);
+    const heroImageInput = document.getElementById('heroImage');
+    if (heroImageInput) {
+        heroImageInput.addEventListener('change', handleHeroImageUpload);
+        console.log('Hero image event listener attached');
+    } else {
+        console.error('Hero image input element not found');
+    }
+    
+    const removeHeroBtn = document.getElementById('removeHeroImageBtn');
+    if (removeHeroBtn) {
+        removeHeroBtn.addEventListener('click', removeHeroImage);
+        console.log('Remove hero image event listener attached');
+    } else {
+        console.error('Remove hero image button not found');
+    }
     
     // Home background upload
-    document.getElementById('homeBackground').addEventListener('change', handleHomeBackgroundUpload);
-    document.getElementById('removeHomeBackgroundBtn').addEventListener('click', removeHomeBackground);
+    const homeBackgroundInput = document.getElementById('homeBackground');
+    if (homeBackgroundInput) {
+        homeBackgroundInput.addEventListener('change', handleHomeBackgroundUpload);
+        console.log('Home background event listener attached');
+    } else {
+        console.error('Home background input element not found');
+    }
+    
+    const removeBackgroundBtn = document.getElementById('removeHomeBackgroundBtn');
+    if (removeBackgroundBtn) {
+        removeBackgroundBtn.addEventListener('click', removeHomeBackground);
+        console.log('Remove background image event listener attached');
+    } else {
+        console.error('Remove background image button not found');
+    }
     
     // Background opacity control
     document.getElementById('backgroundOpacity').addEventListener('input', handleBackgroundOpacityChange);
@@ -859,8 +902,14 @@ function showMessage(message, type = 'success') {
 
 // Hero Image Management
 async function handleHeroImageUpload(e) {
+    console.log('Hero image upload event triggered:', e);
     const file = e.target.files[0];
-    if (!file) return;
+    console.log('Selected file:', file);
+    
+    if (!file) {
+        console.log('No file selected');
+        return;
+    }
     
     // Validate file type
     if (!file.type.startsWith('image/')) {
@@ -988,8 +1037,14 @@ async function loadHeroImagePreview() {
 
 // Home Background Management
 async function handleHomeBackgroundUpload(e) {
+    console.log('Background image upload event triggered:', e);
     const file = e.target.files[0];
-    if (!file) return;
+    console.log('Selected file:', file);
+    
+    if (!file) {
+        console.log('No file selected');
+        return;
+    }
     
     // Validate file type
     if (!file.type.startsWith('image/')) {
